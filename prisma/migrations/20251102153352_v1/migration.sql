@@ -23,6 +23,7 @@ CREATE TABLE `Permission` (
 CREATE TABLE `RolePermission` (
     `roleId` VARCHAR(191) NOT NULL,
     `permissionId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`roleId`, `permissionId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -129,6 +130,7 @@ CREATE TABLE `ProductStock` (
     `purchasePricePerUnit` DOUBLE NOT NULL DEFAULT 0.0,
     `profitPercentage` DOUBLE NOT NULL DEFAULT 0.0,
     `returnOnInvestment` DOUBLE NOT NULL DEFAULT 0.0,
+    `description` VARCHAR(191) NULL,
     `productPresentationId` VARCHAR(191) NULL,
     `productId` VARCHAR(191) NOT NULL,
     `branchId` VARCHAR(191) NOT NULL,
@@ -192,6 +194,7 @@ CREATE TABLE `BusinessBranch` (
     `city` VARCHAR(191) NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `phone` VARCHAR(191) NOT NULL,
+    `currencyId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -274,6 +277,23 @@ CREATE TABLE `Setting` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Currency` (
+    `id` VARCHAR(191) NOT NULL,
+    `coin` VARCHAR(191) NOT NULL,
+    `code` VARCHAR(191) NOT NULL,
+    `symbol` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `country` VARCHAR(191) NOT NULL,
+    `exchange` DOUBLE NOT NULL DEFAULT 1.0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Currency_coin_key`(`coin`),
+    UNIQUE INDEX `Currency_code_key`(`code`),
+    UNIQUE INDEX `Currency_symbol_key`(`symbol`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `RolePermission` ADD CONSTRAINT `RolePermission_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `Role`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -330,6 +350,9 @@ ALTER TABLE `Business` ADD CONSTRAINT `Business_subscriptionPlanId_fkey` FOREIGN
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_currencyId_fkey` FOREIGN KEY (`currencyId`) REFERENCES `Currency`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

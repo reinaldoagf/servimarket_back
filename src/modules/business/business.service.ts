@@ -9,7 +9,7 @@ interface CreateBusinessInput {
   rif?: string;
   description?: string;
   ownerId: string;
-  branches: { country: string; state: string; city: string; address: string; phone: string }[];
+  branches: { country: string; state: string; city: string; address: string; phone: string; currencyId: string }[];
   logo?: string | null;
 }
 
@@ -109,7 +109,7 @@ export class BusinessService {
     if (!owner) {
       throw new NotFoundException(`Owner with id ${input.ownerId} not found`);
     }
-
+    
     // 🚨 Ajusta estos valores si deseas manejar planes de suscripción por defecto
     const expiredDate = new Date();
     expiredDate.setMonth(expiredDate.getMonth() + 1);
@@ -131,6 +131,7 @@ export class BusinessService {
               city: b.city,
               address: b.address,
               phone: b.phone,
+              currencyId: b.currencyId ?? null,
             })),
           },
         },

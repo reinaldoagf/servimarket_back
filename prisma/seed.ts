@@ -36,6 +36,31 @@ async function main(): Promise<void> {
     }],
     skipDuplicates: true,
   });
+  console.log('✅ Configuraciones creadas');
+
+  await prisma.currency.createMany({
+    data: [
+      {
+        coin: 'dollar', 
+        code: 'USD', 
+        symbol: '$', 
+        name: 'Dólar', 
+        exchange: 1,
+        country: 'estados unidos'
+      },
+      { 
+        coin: 'bolivares', 
+        code: 'VEF', 
+        symbol: 'Bs', 
+        name: 'Bolívar', 
+        exchange: 1,
+        country: 'venezuela'
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('✅ Monedas creadas');
 
   await prisma.user.createMany({
     data: [
@@ -55,6 +80,7 @@ async function main(): Promise<void> {
   });
 
   console.log('✅ Usuarios creados con contraseña encriptada');
+
 /* 
   await prisma.permission.createMany({
     data: [

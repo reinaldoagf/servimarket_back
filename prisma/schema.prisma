@@ -84,6 +84,7 @@ model RolePermission {
   permissionId String
   role         Role            @relation(fields: [roleId], references: [id])
   permission   Permission      @relation(fields: [permissionId], references: [id])
+  createdAt DateTime  @default(now())
 
   @@id([roleId, permissionId])
 }
@@ -142,8 +143,8 @@ model ProductBrand {
 model ProductCategory {
   id        String    @id @default(uuid())
   name      String
-  createdAt DateTime  @default(now())
   products  Product[]
+  createdAt DateTime  @default(now())
 }
 
 model Product {
@@ -197,6 +198,7 @@ model ProductStock {
   purchasePricePerUnit   Float                 @default(0.0)
   profitPercentage       Float                 @default(0.0)
   returnOnInvestment     Float                 @default(0.0)
+  description            String?
   productPresentationId  String?
   productPresentation    ProductPresentation?  @relation(fields: [productPresentationId], references: [id])
   productId              String
@@ -231,8 +233,8 @@ model SubscriptionPlan {
   quantityProducts   Int?
   quantityBranches   Int?
   proFunctions       Boolean
-  createdAt          DateTime      @default(now())
   businesses         Business[]
+  createdAt          DateTime  @default(now())
 }
 
 model Business {
@@ -273,6 +275,8 @@ model BusinessBranch {
   pendings      Pending[]
   purchases     BusinessBranchPurchase[]
   settings      Setting[]
+  currencyId    String?
+  currency      Currency? @relation(fields: [currencyId], references: [id])
   createdAt     DateTime  @default(now())
 }
 
@@ -318,7 +322,7 @@ model Purchase {
 }
 
 model BusinessBranchPurchase {
-  id               String   @id @default(uuid())
+  id               String         @id @default(uuid())
   clientName       String?
   clientDNI        String?
   businessRif      String?
@@ -348,4 +352,16 @@ model Setting {
   branchId         String?
   branch           BusinessBranch? @relation(fields: [branchId], references: [id])
   createdAt        DateTime        @default(now())
+}
+
+model Currency {
+  id          String            @id @default(uuid())
+  coin        String            @unique
+  code        String            @unique
+  symbol      String            @unique
+  name        String
+  country     String          
+  exchange    Float             @default(1.0)
+  branches    BusinessBranch[]
+  createdAt   DateTime          @default(now())
 }

@@ -39,6 +39,10 @@ export class CreateProductStockDto {
   @IsNumber()
   @Min(0)
   returnOnInvestment: number;
+  
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsString()

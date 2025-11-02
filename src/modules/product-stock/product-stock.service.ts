@@ -19,7 +19,24 @@ const SELECT_FIELDS = {
   productPresentationId: true,
   productPresentation: true,
   productId: true,
-  product: true,
+  product: {
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      priceCalculation: true,
+      unitMeasurement: true,
+      createdAt: true,
+      brandId: true,
+      brand: {
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+        },
+      },
+    },
+  },
   branchId: true,
   branch: true,
   createdAt: true,

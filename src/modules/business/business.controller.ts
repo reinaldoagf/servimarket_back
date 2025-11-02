@@ -67,6 +67,7 @@ export class BusinessController {
       city: string;
       address: string;
       phone: string;
+      currencyId: string;
     }[] = [];
     if (body.branches) {
       try {
