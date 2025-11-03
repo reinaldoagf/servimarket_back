@@ -7,24 +7,27 @@ import {
   Body,
   Delete,
   Param,
-  ParseIntPipe,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateBusinessBranchPurchaseDto } from './dto/create-business-branch-purchase.dto';
 import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-business-branch-purchase-response.dto';
 import { BusinessBranchPurchaseService } from './business-branch-purchase.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('business-branch-purchase')
 export class BusinessBranchPurchaseController {
   constructor(private readonly service: BusinessBranchPurchaseService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateBusinessBranchPurchaseDto) {
     return this.service.create(dto);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   getByFilters(
     @Query('userId') userId: string = '',
     @Query('branchId') branchId: string = '',
@@ -50,11 +53,13 @@ export class BusinessBranchPurchaseController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
     return this.service.deleteById(id);
   }
   // 📊 Obtener resumen de compras por usuario
   @Get('summary')
+  @UseGuards(JwtAuthGuard)
   async getPurchaseSummary(
     @Query('businessId') businessId: string,
     @Query('branchId') branchId: string,
@@ -63,6 +68,7 @@ export class BusinessBranchPurchaseController {
     return this.service.getPurchaseSummaryByFilters(businessId, branchId, userId);
   }
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateBusinessBranchPurchaseDto,

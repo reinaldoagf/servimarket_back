@@ -1,13 +1,15 @@
 // src/pendings/pendings.controller.ts
-import { Controller, Get, Post, Body, Query, ParseIntPipe, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, ParseIntPipe, Delete, Param, UseGuards } from '@nestjs/common';
 import { PendingsService } from './pendings.service';
 import { CreatePendingDto } from './dto/create-pending.dto';
 import { PaginatedPendingResponseDto } from './dto/paginated-pending-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('pendings')
 export class PendingsController {
   constructor(private readonly service: PendingsService) {}
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('businessId') businessId: string = '',
     @Query('branchId') branchId: string = '',
@@ -32,10 +34,12 @@ export class PendingsController {
     );
   }
   @Post()
+  @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreatePendingDto) {
     return this.service.addPending(dto);
   }
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async delete(@Param('id') id: string) {
     return this.service.deletePending(id);
   }

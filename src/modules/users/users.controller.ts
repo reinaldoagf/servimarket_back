@@ -1,18 +1,18 @@
 // src/modules/users/users.controller.ts
-import { Controller, Get, Post, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { PaginatedUserResponseDto } from './dto/paginated-user-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly service: UsersService) {}
-
-  //  http://localhost:3000/users?page=1&size=10&search=&status=&startDate=&endDate=
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('page', ParseIntPipe) page = '1',
     @Query('size', ParseIntPipe) pageSize = '10',
@@ -32,13 +32,13 @@ export class UsersController {
       endDate,
     );
   }
-
   @Get('/:id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<UserResponseDto | null> {
     return this.service.findOne(id);
   }
-
   @Post()
+  @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     return this.service.create(dto);
   }

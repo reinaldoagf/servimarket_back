@@ -1,13 +1,15 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { SettingResponseDto } from './dto/setting-response.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Settings')
 @Controller('settings')
 export class SettingsController {
   constructor(private readonly service: SettingsService) {}
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('key') key?: string,
     @Query('userId') userId?: string,

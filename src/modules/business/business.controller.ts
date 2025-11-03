@@ -10,6 +10,7 @@ import {
   Delete,
   Param,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -17,12 +18,14 @@ import { extname } from 'path';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { PaginatedBusinessResponseDto } from './dto/paginated-business-response.dto';
 import { BusinessService } from './business.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('business')
 export class BusinessController {
   constructor(private readonly service: BusinessService) {}
 
   @Get('/')
+  @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('country') country = '',
     @Query('state') state = '',
@@ -48,6 +51,7 @@ export class BusinessController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('logo', {
       storage: diskStorage({
@@ -87,6 +91,7 @@ export class BusinessController {
     });
   }
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async delete(@Param('id') id: string) {
     return this.service.delete(id);
   }
