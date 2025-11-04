@@ -14,6 +14,40 @@ export class BusinessBranchPurchaseService {
     private clientsService: ClientsService,
   ) {}
 
+  private readonly INCLUDE_FIELDS = {
+    business: {
+      select: { id: true, name: true },
+    },
+    branch: {
+      select: { id: true, city: true, address: true },
+    },
+    purchases: {
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            brand: {
+              select: {
+                id: true,
+                name: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+        productPresentation: {
+          select: {
+            id: true,
+            flavor: true,
+            measurementQuantity: true,
+            packing: true,
+          },
+        },
+      },
+    },
+  };
+
   private readonly SELECT_FIELDS = {
     id: true,
     clientName: true,
@@ -180,11 +214,7 @@ export class BusinessBranchPurchaseService {
     return { message: `Purchase ${id} and its items were deleted successfully.` };
   }
 
-  async getPurchaseSummaryByFilters(
-    businessId?: string,
-    branchId?: string,
-    userId?: string,
-  ) {
+  async getPurchaseSummaryByFilters(businessId?: string, branchId?: string, userId?: string) {
     if (!userId && !businessId && !branchId) {
       throw new BadRequestException(
         'Debe enviar al menos un identificador (userId, businessId o branchId)',
@@ -284,5 +314,48 @@ export class BusinessBranchPurchaseService {
         status: dto.amountCancelled == purchase.totalAmount ? 'pagado' : purchase.status,
       },
     });
+  }
+
+  async myLastPurchase(userId?: string) {
+    if (!userId) {
+      throw new NotFoundException('User ID is required');
+    }
+
+    // Buscar la última compra general del usuario
+    const lastPurchase = await this.prisma.businessBranchPurchase.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: this.INCLUDE_FIELDS,
+    });
+
+    if (!lastPurchase) {
+      throw new NotFoundException('No purchases found for this user');
+    }
+
+    return lastPurchase;
+  }
+
+  async myLastSale(businessId?: string, branchId?: string) {
+    // 🔹 Construimos filtros dinámicos
+    const where: any = {};
+
+    if (branchId?.length) {
+      where.branchId = branchId;
+    } else if (businessId) {
+      where.businessId = businessId;
+    }
+
+    // Buscar la última compra general del usuario
+    const lastSale = await this.prisma.businessBranchPurchase.findFirst({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: this.INCLUDE_FIELDS,
+    });
+
+    if (!lastSale) {
+      throw new NotFoundException('No purchases found for this business');
+    }
+
+    return lastSale;
   }
 }

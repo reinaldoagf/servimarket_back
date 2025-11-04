@@ -157,6 +157,7 @@ model Product {
   category               ProductCategory?      @relation(fields: [categoryId], references: [id])
   brandId                String?
   brand                  ProductBrand?         @relation(fields: [brandId], references: [id])
+  businessRef            String?
   businessId             String?
   business               Business?             @relation(fields: [businessId], references: [id])
   presentations          ProductPresentation[]
@@ -322,22 +323,25 @@ model Purchase {
 }
 
 model BusinessBranchPurchase {
-  id               String         @id @default(uuid())
+  id               String          @id @default(uuid())
   clientName       String?
   clientDNI        String?
-  businessRif      String?
+  businessRef      String?
+  branchRef        String?
+  registeredById   String?
+  registeredBy     User?           @relation(fields: [registeredById], references: [id])
   userId           String?
-  user             User?          @relation(fields: [userId], references: [id])
+  user             User?           @relation(fields: [userId], references: [id])
   businessId       String?
-  business         Business?      @relation(fields: [businessId], references: [id])
-  branchId         String
-  branch           BusinessBranch @relation(fields: [branchId], references: [id])
+  business         Business?       @relation(fields: [businessId], references: [id])
+  branchId         String?
+  branch           BusinessBranch? @relation(fields: [branchId], references: [id])
   amountCancelled  Float
   totalAmount      Float
-  expiredDate      DateTime?      //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
-  status           PurchaseStatus @default(pendiente)
+  expiredDate      DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
+  status           PurchaseStatus  @default(pendiente)
   purchases        Purchase[]
-  createdAt        DateTime       @default(now())
+  createdAt        DateTime        @default(now())
 }
 
 model Setting {

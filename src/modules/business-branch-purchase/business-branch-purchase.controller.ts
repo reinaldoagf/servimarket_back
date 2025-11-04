@@ -4,6 +4,7 @@ import {
   Get,
   Query,
   Post,
+  Req,
   Body,
   Delete,
   Param,
@@ -67,12 +68,19 @@ export class BusinessBranchPurchaseController {
   ) {
     return this.service.getPurchaseSummaryByFilters(businessId, branchId, userId);
   }
+  @Get('my-last-purchase')
+  @UseGuards(JwtAuthGuard)
+  async myLastPurchase(@Req() req: any) {
+    return this.service.myLastPurchase(req.user.sub);
+  }
+  @Get('my-last-sale')
+  @UseGuards(JwtAuthGuard)
+  async myLastSale(@Query('businessId') businessId: string, @Query('branchId') branchId: string) {
+    return this.service.myLastSale(businessId, branchId);
+  }
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateBusinessBranchPurchaseDto,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
     return this.service.update(id, dto);
   }
 }
