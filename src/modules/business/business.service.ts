@@ -109,7 +109,7 @@ export class BusinessService {
     if (!owner) {
       throw new NotFoundException(`Owner with id ${input.ownerId} not found`);
     }
-    
+
     // 🚨 Ajusta estos valores si deseas manejar planes de suscripción por defecto
     const expiredDate = new Date();
     expiredDate.setMonth(expiredDate.getMonth() + 1);
@@ -152,8 +152,6 @@ export class BusinessService {
     if (!business) {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
-
-    // 🔹 Buscar todos los branches asociados al negocio
     const branches = await this.prisma.businessBranch.findMany({
       where: { businessId: id },
       select: { id: true },
@@ -163,25 +161,6 @@ export class BusinessService {
 
     // 🔹 Si existen dependencias (ejemplo: pendings ligados a branchId), borrarlas primero
     if (branchIds.length > 0) {
-      // 🔹 Buscar todas las compras asociadas a esos branches
-      const purchases = await this.prisma.businessBranchPurchase.findMany({
-        where: { branchId: { in: branchIds } },
-        select: { id: true },
-      });
-
-      const purchaseIds = purchases.map((p) => p.id);
-
-      // 🧩 Eliminar los registros dependientes en orden inverso
-      if (purchaseIds.length > 0) {
-        await this.prisma.purchase.deleteMany({
-          where: { businessBranchPurchaseId: { in: purchaseIds } },
-        });
-
-        await this.prisma.businessBranchPurchase.deleteMany({
-          where: { id: { in: purchaseIds } },
-        });
-      }
-
       await this.prisma.productStock.deleteMany({
         where: { branchId: { in: branchIds } },
       });

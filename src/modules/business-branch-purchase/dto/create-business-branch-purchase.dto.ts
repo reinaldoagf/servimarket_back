@@ -43,10 +43,7 @@ export class CreateBusinessBranchPurchaseDto {
   userId?: string;
 
   @IsString()
-  businessId: string;
-
-  @IsString()
-  branchId: string;
+  cashRegisterId: string;
 
   @IsNumber()
   amountCancelled: number;

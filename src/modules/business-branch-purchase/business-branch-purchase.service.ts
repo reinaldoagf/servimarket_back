@@ -4,22 +4,22 @@ import { CreateBusinessBranchPurchaseDto } from './dto/create-business-branch-pu
 import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-business-branch-purchase-response.dto';
 import { Prisma } from '@prisma/client';
 import { ClientsService } from '../clients/clients.service';
-import { PurchaseStatus } from '@prisma/client';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
 
 @Injectable()
 export class BusinessBranchPurchaseService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly service: PrismaService,
     private clientsService: ClientsService,
   ) {}
 
   private readonly INCLUDE_FIELDS = {
-    business: {
-      select: { id: true, name: true },
-    },
-    branch: {
-      select: { id: true, city: true, address: true },
+    cashRegister: {
+      include: {
+        description: true,
+        business: { select: { id: true, name: true } },
+        branch: { select: { id: true, city: true, address: true } },
+      },
     },
     purchases: {
       include: {
@@ -53,14 +53,30 @@ export class BusinessBranchPurchaseService {
     clientName: true,
     clientDNI: true,
     userId: true,
-    businessId: true,
-    branchId: true,
+    cashRegisterId: true,
     amountCancelled: true,
     totalAmount: true,
     status: true,
     createdAt: true,
-    branch: { select: { id: true, address: true } },
-    business: { select: { id: true, name: true, rif: true, logo: true } },
+    cashRegister: {
+      select: {
+        id: true,
+        description: true,
+        collaborator: {
+          select: {
+            id: true,
+            user: { select: { id: true, name: true, email: true, dni: true } },
+            branch: {
+              select: {
+                id: true,
+                address: true,
+                business: { select: { id: true, name: true, rif: true, logo: true } },
+              },
+            },
+          },
+        },
+      },
+    },
     user: { select: { id: true, name: true, email: true, avatar: true } },
     purchases: {
       select: {
@@ -78,36 +94,55 @@ export class BusinessBranchPurchaseService {
     },
   };
 
-  async create(dto: CreateBusinessBranchPurchaseDto) {
-    const branch = await this.prisma.businessBranch.findUnique({ where: { id: dto.branchId } });
-    if (!branch) throw new NotFoundException(`Branch with ID ${dto.branchId} not found`);
+  /* async create(dto: CreateBusinessBranchPurchaseDto) {
+    // 1️⃣ Validar ID de caja registradora
+    if (!dto.cashRegisterId?.length) {
+      throw new BadRequestException('CashRegisterId is required.');
+    }
 
-    const business = await this.prisma.business.findUnique({ where: { id: dto.businessId } });
-    if (!business) throw new NotFoundException(`Business with ID ${dto.businessId} not found`);
+    // 2️⃣ Buscar caja registradora con relaciones necesarias
+    const cashRegister = await this.service.cashRegister.findUnique({
+      where: { id: dto.cashRegisterId },
+      select: {
+        id: true,
+        description: true,
+        collaborator: { select: { branchId: true } },
+      },
+    });
 
+    if (!cashRegister) {
+      throw new NotFoundException(`CashRegister with ID ${dto.cashRegisterId} not found`);
+    }
+
+    // 3️⃣ Validar que haya al menos un ítem de compra
     if (!dto.purchases || dto.purchases.length === 0) {
       throw new BadRequestException('At least one purchase item is required.');
     }
 
-    if (dto.amountCancelled < dto.totalAmount && dto.branchId && dto.userId) {
-      // Validar si ya existe
-      const existing = await this.prisma.businessBranchClient.findFirst({
-        where: { branchId: dto.branchId, userId: dto.userId },
+    // 4️⃣ Si el pago es parcial, registrar cliente si no existe
+    const isPartialPayment = dto.amountCancelled < dto.totalAmount;
+    const branchId = cashRegister.collaborator?.branchId;
+
+    if (isPartialPayment && branchId && dto.userId) {
+      const existingClient = await this.service.businessBranchClient.findFirst({
+        where: { branchId, userId: dto.userId },
       });
 
-      if (!existing) {
-        await this.clientsService.addClient({ branchId: dto.branchId, userId: dto.userId });
+      if (!existingClient) {
+        await this.clientsService.addClient({
+          branchId,
+          userId: dto.userId,
+        });
       }
     }
 
-    // Crear la compra con sus detalles
-    return this.prisma.businessBranchPurchase.create({
+    // 5️⃣ Crear la compra principal con sus detalles
+    return this.service.businessBranchPurchase.create({
       data: {
-        clientName: dto.clientName,
-        clientDNI: dto.clientDNI,
-        userId: dto.userId,
-        businessId: dto.businessId,
-        branchId: dto.branchId,
+        clientName: dto.clientName ?? null,
+        clientDNI: dto.clientDNI ?? null,
+        userId: dto.userId ?? null,
+        cashRegisterId: dto.cashRegisterId,
         amountCancelled: dto.amountCancelled,
         totalAmount: dto.totalAmount,
         status: dto.amountCancelled === dto.totalAmount ? 'pagado' : dto.status,
@@ -120,13 +155,12 @@ export class BusinessBranchPurchaseService {
           })),
         },
       },
-      select: this.SELECT_FIELDS,
+      select: this.SELECT_FIELDS, // asumo que ya está definido en tu clase
     });
   }
 
   async getByFilters(
-    userId: string = '',
-    branchId: string = '',
+    cashRegisterId: string = '',
     page = 1,
     pageSize = 10,
     search = '',
@@ -138,16 +172,14 @@ export class BusinessBranchPurchaseService {
     const skip = (page - 1) * pageSize;
     const where: Prisma.BusinessBranchPurchaseWhereInput = {};
 
-    if (userId?.length) {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (!user) throw new NotFoundException(`User with ID ${userId} not found`);
-      where.userId = userId;
-    }
-
-    if (branchId?.length) {
-      const branch = await this.prisma.businessBranch.findUnique({ where: { id: branchId } });
-      if (!branch) throw new NotFoundException(`Branch with ID ${branchId} not found`);
-      where.branchId = branchId;
+    // 🔸 Validación de caja registradora
+    if (cashRegisterId?.length) {
+      const cashRegister = await this.service.cashRegister.findUnique({
+        where: { id: cashRegisterId },
+      });
+      if (!cashRegister)
+        throw new NotFoundException(`CashRegister with ID ${cashRegisterId} not found`);
+      where.cashRegisterId = cashRegisterId;
     }
 
     if (search) {
@@ -156,13 +188,14 @@ export class BusinessBranchPurchaseService {
         { user: { email: { contains: search } } },
         { user: { username: { contains: search } } },
         { user: { dni: { contains: search } } },
-        { business: { name: { contains: search } } },
-        { branch: { country: { contains: search } } },
-        { branch: { state: { contains: search } } },
-        { branch: { city: { contains: search } } },
-        { branch: { address: { contains: search } } },
         { clientName: { contains: search } },
         { clientDNI: { contains: search } },
+        { cashRegister: { description: { contains: search } } },
+        { cashRegister: { business: { name: { contains: search } } } },
+        { cashRegister: { branch: { country: { contains: search } } } },
+        { cashRegister: { branch: { state: { contains: search } } } },
+        { cashRegister: { branch: { city: { contains: search } } } },
+        { cashRegister: { branch: { address: { contains: search } } } },
       ];
     }
 
@@ -179,8 +212,8 @@ export class BusinessBranchPurchaseService {
     }
 
     const [total, data] = await Promise.all([
-      this.prisma.businessBranchPurchase.count({ where }),
-      this.prisma.businessBranchPurchase.findMany({
+      this.service.businessBranchPurchase.count({ where }),
+      this.service.businessBranchPurchase.findMany({
         where,
         select: this.SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -199,7 +232,7 @@ export class BusinessBranchPurchaseService {
   }
 
   async deleteById(id: string) {
-    const existing = await this.prisma.businessBranchPurchase.findUnique({
+    const existing = await this.service.businessBranchPurchase.findUnique({
       where: { id },
       include: { purchases: true },
     });
@@ -207,9 +240,9 @@ export class BusinessBranchPurchaseService {
     if (!existing) throw new NotFoundException(`Purchase with ID ${id} not found`);
 
     // Eliminar primero los registros hijos (purchases)
-    await this.prisma.purchase.deleteMany({ where: { businessBranchPurchaseId: id } });
+    await this.service.purchase.deleteMany({ where: { businessBranchPurchaseId: id } });
 
-    await this.prisma.businessBranchPurchase.delete({ where: { id } });
+    await this.service.businessBranchPurchase.delete({ where: { id } });
 
     return { message: `Purchase ${id} and its items were deleted successfully.` };
   }
@@ -225,11 +258,11 @@ export class BusinessBranchPurchaseService {
     const where: any = {};
 
     if (userId?.length) where.userId = userId;
-    if (businessId) where.businessId = businessId;
-    if (branchId?.length) where.branchId = branchId;
+    if (businessId) where.cashRegister.businessId = businessId;
+    if (branchId?.length) where.cashRegister.branchId = branchId;
 
     // 🔹 Buscamos las compras filtradas
-    const purchases = await this.prisma.businessBranchPurchase.findMany({
+    const purchases = await this.service.businessBranchPurchase.findMany({
       where,
       select: {
         id: true,
@@ -301,13 +334,13 @@ export class BusinessBranchPurchaseService {
   }
 
   async update(id: string, dto: UpdateBusinessBranchPurchaseDto) {
-    const purchase = await this.prisma.businessBranchPurchase.findUnique({ where: { id } });
+    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
 
     if (!purchase) {
       throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
     }
 
-    return this.prisma.businessBranchPurchase.update({
+    return this.service.businessBranchPurchase.update({
       where: { id },
       data: {
         amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
@@ -322,7 +355,7 @@ export class BusinessBranchPurchaseService {
     }
 
     // Buscar la última compra general del usuario
-    const lastPurchase = await this.prisma.businessBranchPurchase.findFirst({
+    const lastPurchase = await this.service.businessBranchPurchase.findFirst({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: this.INCLUDE_FIELDS,
@@ -346,7 +379,7 @@ export class BusinessBranchPurchaseService {
     }
 
     // Buscar la última compra general del usuario
-    const lastSale = await this.prisma.businessBranchPurchase.findFirst({
+    const lastSale = await this.service.businessBranchPurchase.findFirst({
       where,
       orderBy: { createdAt: 'desc' },
       include: this.INCLUDE_FIELDS,
@@ -357,5 +390,5 @@ export class BusinessBranchPurchaseService {
     }
 
     return lastSale;
-  }
+  } */
 }

@@ -115,6 +115,7 @@ export class AuthService {
                 settings: true,
               },
             },
+            cashRegister: true,
           },
         },
       },

@@ -21,17 +21,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class BusinessBranchPurchaseController {
   constructor(private readonly service: BusinessBranchPurchaseService) {}
 
-  @Post()
+  /* @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() dto: CreateBusinessBranchPurchaseDto) {
+  create(@Req() req: any, @Body() dto: CreateBusinessBranchPurchaseDto) {
     return this.service.create(dto);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   getByFilters(
-    @Query('userId') userId: string = '',
-    @Query('branchId') branchId: string = '',
+    @Query('cashRegisterId') cashRegisterId: string = '',
     @Query('page') page = 1,
     @Query('pageSize') pageSize = 10,
     @Query('search') search = '',
@@ -41,8 +40,7 @@ export class BusinessBranchPurchaseController {
     @Query('endDate') endDate = '',
   ): Promise<PaginatedBusinessBranchPurchaseResponseDto> {
     return this.service.getByFilters(
-      userId,
-      branchId,
+      cashRegisterId,
       +page,
       +pageSize,
       search,
@@ -82,5 +80,5 @@ export class BusinessBranchPurchaseController {
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
     return this.service.update(id, dto);
-  }
+  } */
 }

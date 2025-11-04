@@ -127,10 +127,10 @@ export class CollaboratorsService {
       throw new NotFoundException('Branch not found');
     }
 
-    // Validar que el colaborador no sea el owner
-    if (branch.business?.ownerId === dto.userId) {
+    /* // Validar que el colaborador no sea el owner
+    if () {
       throw new BadRequestException('Owner cannot be added as user');
-    }
+    } */
 
     // Validar si ya existe
     const existing = await this.prisma.businessBranchCollaborator.findFirst({
@@ -146,7 +146,7 @@ export class CollaboratorsService {
       data: {
         branchId: dto.branchId,
         userId: dto.userId,
-        isAdmin: dto.isAdmin ?? false,
+        isAdmin: dto.isAdmin || branch?.business?.ownerId === dto.userId,
       },
     });
   }

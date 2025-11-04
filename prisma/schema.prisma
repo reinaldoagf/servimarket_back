@@ -251,20 +251,20 @@ model Business {
   subscriptionPlan          SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
   subscriptionDate          DateTime
   expirationDate            DateTime
-  purchases                 BusinessBranchPurchase[]
   pendings                  Pending[]
   products                  Product[]
   settings                  Setting[]
+  cashRegisters             CashRegister[]
   // relación 1:N con usuarios (empleados/miembros)
   /* users User[] @relation("BusinessUsers") */
   createdAt                 DateTime         @default(now())
 }
 
 model BusinessBranch {
-  id            String    @id @default(uuid())
+  id            String                       @id @default(uuid())
   businessId    String?
-  business      Business? @relation(fields: [businessId], references: [id])
-  country       String    @default("venezuela")
+  business      Business?                    @relation(fields: [businessId], references: [id])
+  country       String                       @default("venezuela")
   state         String
   city          String
   address       String
@@ -274,21 +274,35 @@ model BusinessBranch {
   clients       BusinessBranchClient[]
   suppliers     BusinessBranchSupplier[]
   pendings      Pending[]
-  purchases     BusinessBranchPurchase[]
   settings      Setting[]
+  cashRegisters CashRegister[]
   currencyId    String?
-  currency      Currency? @relation(fields: [currencyId], references: [id])
-  createdAt     DateTime  @default(now())
+  currency      Currency?                    @relation(fields: [currencyId], references: [id])
+  createdAt     DateTime                     @default(now())
+}
+
+model CashRegister {
+  id                String                       @id @default(uuid())
+  description       String?
+  collaborator      BusinessBranchCollaborator?
+  businessId        String
+  business          Business                     @relation(fields: [businessId], references: [id])
+  branchId          String?
+  branch            BusinessBranch?              @relation(fields: [branchId], references: [id])
+  purchases         BusinessBranchPurchase[]
+  createdAt         DateTime                     @default(now())
 }
 
 model BusinessBranchCollaborator {
-  id        String         @id @default(uuid())
-  userId    String
-  branchId  String
-  user      User           @relation(fields: [userId], references: [id])
-  branch    BusinessBranch @relation(fields: [branchId], references: [id])
-  isAdmin   Boolean        @default(false)
-  createdAt DateTime       @default(now())
+  id                String                      @id @default(uuid())
+  userId            String
+  user              User                        @relation(fields: [userId], references: [id])
+  branchId          String
+  branch            BusinessBranch              @relation(fields: [branchId], references: [id])
+  cashRegisterId    String?                     @unique
+  cashRegister      CashRegister?               @relation(fields: [cashRegisterId], references: [id])
+  isAdmin           Boolean                     @default(false)
+  createdAt         DateTime                    @default(now())
 }
 
 model BusinessBranchClient {
@@ -327,15 +341,13 @@ model BusinessBranchPurchase {
   clientName       String?
   clientDNI        String?
   businessRef      String?
+  registeredRef    String?
+  cashRegisterRef  String?
   branchRef        String?
-  registeredById   String?
-  registeredBy     User?           @relation(fields: [registeredById], references: [id])
+  cashRegisterId   String?
+  cashRegister     CashRegister?   @relation(fields: [cashRegisterId], references: [id])
   userId           String?
   user             User?           @relation(fields: [userId], references: [id])
-  businessId       String?
-  business         Business?       @relation(fields: [businessId], references: [id])
-  branchId         String?
-  branch           BusinessBranch? @relation(fields: [branchId], references: [id])
   amountCancelled  Float
   totalAmount      Float
   expiredDate      DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))

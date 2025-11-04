@@ -6,23 +6,32 @@ export class BusinessBranchPurchaseResponseDto {
   clientName?: string | null;
   clientDNI?: string | null;
   userId?: string | null;
-  businessId: string | null;
-  branchId: string;
+  cashRegisterId: string;
   amountCancelled: number;
   totalAmount: number;
   status: PurchaseStatus;
   createdAt: Date;
 
   // Relaciones
-  branch?: {
-    id: string;
-    address: string;
-  } | null;
-
-  business?: {
-    id: string;
-    name: string;
-  } | null;
+  /* cashRegister: {
+    description: string;
+    branch?: {
+      id: string;
+      address: string;
+    } | null;
+    business?: {
+      id: string;
+      name: string;
+      rif?: string | null;
+      logo?: string | null;
+    };
+    collaborator?: {
+      id: string;
+      name: string;
+      email: string;
+      dni: string;
+    } | null;
+  }; */
 
   user?: {
     id: string;

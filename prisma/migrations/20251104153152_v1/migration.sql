@@ -90,6 +90,7 @@ CREATE TABLE `Product` (
     `priceCalculation` ENUM('presentacion', 'cantidad', 'unidadDeMedida') NULL DEFAULT 'presentacion',
     `categoryId` VARCHAR(191) NULL,
     `brandId` VARCHAR(191) NULL,
+    `businessRef` VARCHAR(191) NULL,
     `businessId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -201,13 +202,26 @@ CREATE TABLE `BusinessBranch` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `CashRegister` (
+    `id` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `businessId` VARCHAR(191) NOT NULL,
+    `branchId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `BusinessBranchCollaborator` (
     `id` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
     `branchId` VARCHAR(191) NOT NULL,
+    `cashRegisterId` VARCHAR(191) NULL,
     `isAdmin` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `BusinessBranchCollaborator_cashRegisterId_key`(`cashRegisterId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -249,10 +263,12 @@ CREATE TABLE `BusinessBranchPurchase` (
     `id` VARCHAR(191) NOT NULL,
     `clientName` VARCHAR(191) NULL,
     `clientDNI` VARCHAR(191) NULL,
-    `businessRif` VARCHAR(191) NULL,
+    `businessRef` VARCHAR(191) NULL,
+    `registeredRef` VARCHAR(191) NULL,
+    `cashRegisterRef` VARCHAR(191) NULL,
+    `branchRef` VARCHAR(191) NULL,
+    `cashRegisterId` VARCHAR(191) NULL,
     `userId` VARCHAR(191) NULL,
-    `businessId` VARCHAR(191) NULL,
-    `branchId` VARCHAR(191) NOT NULL,
     `amountCancelled` DOUBLE NOT NULL,
     `totalAmount` DOUBLE NOT NULL,
     `expiredDate` DATETIME(3) NULL,
@@ -355,10 +371,19 @@ ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_businessId_fkey` FOR
 ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_currencyId_fkey` FOREIGN KEY (`currencyId`) REFERENCES `Currency`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchClient` ADD CONSTRAINT `BusinessBranchClient_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -382,13 +407,10 @@ ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productId_fkey` FOREIGN KEY (`pr
 ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productPresentationId_fkey` FOREIGN KEY (`productPresentationId`) REFERENCES `ProductPresentation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Setting` ADD CONSTRAINT `Setting_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
