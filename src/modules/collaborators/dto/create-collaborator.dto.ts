@@ -11,6 +11,10 @@ export class CreateCollaboratorDto {
   @Type(() => String) // 🔹 convierte automáticamente a número
   branchId: string;
 
+  @IsString()
+  @Type(() => String) // 🔹 convierte automáticamente a número
+  cashRegisterId: string;
+
   @IsBoolean()
   @IsOptional()
   @Type(() => Boolean) // 🔹 convierte automáticamente a boolean

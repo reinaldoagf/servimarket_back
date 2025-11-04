@@ -25,8 +25,8 @@ const SELECT_FIELDS = {
   businessId: true,
   avatar: true,
   settings: true,
-  business: { include: { branches: true, settings: true } },
-  collaborations: { include: { branch: { include: { business: true, settings: true } } } },
+  business: { include: { branches: { include: { cashRegisters: true } }, settings: true } },
+  collaborations: { include: { branch: { include: { business: true, settings: true, cashRegisters: true } }, cashRegister: true } },
 };
 
 @Injectable()
@@ -103,7 +103,9 @@ export class AuthService {
       include: {
         business: {
           include: {
-            branches: true, // Trae todos los branches del business
+            branches: {
+              include: { cashRegisters: true },
+            }, // Trae todos los branches del business
             settings: true,
           },
         },
@@ -113,6 +115,7 @@ export class AuthService {
               include: {
                 business: true,
                 settings: true,
+                cashRegisters: true,
               },
             },
             cashRegister: true,
@@ -125,10 +128,9 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    const userSafe = (({ ...rest }) => rest)(user);
 
     const token = this.signToken(user.id, user.email);
-    return { access_token: token, user: userSafe };
+    return { access_token: token, user: user };
   }
 
   async updateProfile(userId: string, dto: UpdateAuthDto) {
@@ -179,6 +181,19 @@ export class AuthService {
     });
 
     return { message: 'Profile updated successfully', user: updated };
+  }
+
+  async me(req: any) {
+    if (req.user){
+      const user = await this.service.user.findUnique({
+        where: { email: req.user.email }, select: SELECT_FIELDS,
+      })
+      if (!user) throw new UnauthorizedException('Invalid credentials');
+      const userSafe = (({ ...rest }) => rest)(user);
+      const token = this.signToken(user.id, user.email);
+      return { access_token: token, user: userSafe };
+    }
+    return { access_token: null, user: null };
   }
 
   signToken(userId: string, email: string) {

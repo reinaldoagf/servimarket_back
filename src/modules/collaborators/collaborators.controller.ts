@@ -1,9 +1,10 @@
 // src/collaborators/collaborators.controller.ts
-import { Controller, Get, Post, Body, Query, ParseIntPipe, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, ParseIntPipe, Delete, Param, UseGuards } from '@nestjs/common';
 import { CollaboratorsService } from './collaborators.service';
 import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
 import { PaginatedCollaboratorResponseDto } from './dto/paginated-collaborator-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateCollaboratorDto } from './dto/update-collaborator.dto';
 
 @Controller('collaborators')
 export class CollaboratorsController {
@@ -37,6 +38,11 @@ export class CollaboratorsController {
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateCollaboratorDto) {
     return this.service.addCollaborator(dto);
+  }
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() dto: UpdateCollaboratorDto) {
+    return this.service.updateCollaborator(id, dto);
   }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

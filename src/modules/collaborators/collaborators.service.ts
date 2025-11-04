@@ -4,10 +4,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateCollaboratorDto } from './dto/create-collaborator.dto';
 import { PaginatedCollaboratorResponseDto } from './dto/paginated-collaborator-response.dto';
+import { UpdateCollaboratorDto } from './dto/update-collaborator.dto';
 
 @Injectable()
 export class CollaboratorsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
     branchId?: string | null,
@@ -65,8 +66,8 @@ export class CollaboratorsService {
     }
 
     const [total, collaborators] = await Promise.all([
-      this.prisma.businessBranchCollaborator.count({ where }),
-      this.prisma.businessBranchCollaborator.findMany({
+      this.service.businessBranchCollaborator.count({ where }),
+      this.service.businessBranchCollaborator.findMany({
         where,
         include: {
           user: {
@@ -93,6 +94,12 @@ export class CollaboratorsService {
               address: true,
             },
           },
+          cashRegister: {
+            select: {
+              id: true,
+              description: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -105,6 +112,7 @@ export class CollaboratorsService {
       id: c.id,
       user: c.user,
       branch: c.branch,
+      cashRegister: c.cashRegister,
       createdAt: c.createdAt,
     }));
 
@@ -118,7 +126,7 @@ export class CollaboratorsService {
   }
 
   async addCollaborator(dto: CreateCollaboratorDto) {
-    const branch = await this.prisma.businessBranch.findUnique({
+    const branch = await this.service.businessBranch.findUnique({
       where: { id: dto.branchId },
       include: { business: true },
     });
@@ -133,7 +141,7 @@ export class CollaboratorsService {
     } */
 
     // Validar si ya existe
-    const existing = await this.prisma.businessBranchCollaborator.findFirst({
+    const existing = await this.service.businessBranchCollaborator.findFirst({
       where: { branchId: dto.branchId, userId: dto.userId },
     });
 
@@ -142,10 +150,11 @@ export class CollaboratorsService {
     }
 
     // Crear el colaborador
-    return this.prisma.businessBranchCollaborator.create({
+    return this.service.businessBranchCollaborator.create({
       data: {
         branchId: dto.branchId,
         userId: dto.userId,
+        cashRegisterId: dto.cashRegisterId,
         isAdmin: dto.isAdmin || branch?.business?.ownerId === dto.userId,
       },
     });
@@ -153,7 +162,7 @@ export class CollaboratorsService {
 
   async deleteCollaborator(id: string) {
     // Verificar si existe antes de eliminar
-    const collaborator = await this.prisma.businessBranchCollaborator.findUnique({
+    const collaborator = await this.service.businessBranchCollaborator.findUnique({
       where: { id },
     });
 
@@ -161,8 +170,37 @@ export class CollaboratorsService {
       throw new NotFoundException(`Collaborator with ID ${id} not found`);
     }
 
-    return this.prisma.businessBranchCollaborator.delete({
+    return this.service.businessBranchCollaborator.delete({
       where: { id },
+    });
+  }
+
+  async updateCollaborator(id: string, dto: UpdateCollaboratorDto) {
+    const branch = await this.service.businessBranch.findUnique({
+      where: { id: dto.branchId },
+      include: { business: true },
+    });
+
+    if (!branch) {
+      throw new NotFoundException('Branch not found');
+    }
+
+    const collaborator = await this.service.businessBranchCollaborator.findUnique({
+      where: { id },
+    });
+
+    if (!collaborator) {
+      throw new NotFoundException(`Collaborator with ID ${id} not found`);
+    }
+
+    return this.service.businessBranchCollaborator.update({
+      where: { id },
+      data: {
+        branchId: dto.branchId ?? collaborator.branchId,
+        cashRegisterId: dto.cashRegisterId ?? collaborator.cashRegisterId,
+        userId: dto.userId ?? collaborator.userId,
+        isAdmin: dto.isAdmin || branch?.business?.ownerId === dto.userId,
+      },
     });
   }
 }

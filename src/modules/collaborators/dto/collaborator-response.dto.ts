@@ -11,5 +11,9 @@ export class CollaboratorResponseDto {
     city: string;
     address: string;
   };
+  cashRegister: {
+    id: string;
+    description: string | null;
+  } | null;
   createdAt: Date;
 }

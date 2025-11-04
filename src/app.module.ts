@@ -7,6 +7,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { BusinessModule } from './modules/business/business.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { CollaboratorsModule } from './modules/collaborators/collaborators.module';
+import { CashRegistersModule } from './modules/cash-registers/cash-registers.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { PendingsModule } from './modules/pendings/pendings.module';
 import { BrandsModule } from './modules/brands/brands.module';
@@ -28,6 +29,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
     BusinessModule,
     ClientsModule,
     CollaboratorsModule,
+    CashRegistersModule,
     SuppliersModule,
     PendingsModule,
     BrandsModule,

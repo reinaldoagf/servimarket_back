@@ -41,7 +41,7 @@ export class AuthController {
   @Get('me')
   me(@Req() req: any) {
     // req.user es lo que devuelve JwtStrategy.validate()
-    return req.user;
+    return this.service.me(req);
   }
 
   // ✅ Actualizar datos del usuario autenticado
