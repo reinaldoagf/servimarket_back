@@ -6,7 +6,7 @@ export class BusinessBranchPurchaseResponseDto {
   clientName?: string | null;
   clientDNI?: string | null;
   userId?: string | null;
-  cashRegisterId: string;
+  cashRegisterId: string | null;
   amountCancelled: number;
   totalAmount: number;
   status: PurchaseStatus;

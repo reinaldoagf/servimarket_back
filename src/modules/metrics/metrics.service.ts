@@ -4,7 +4,7 @@ import { ProductCategory } from '@prisma/client';
 
 @Injectable()
 export class MetricsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getPurchasesByCategory(
     businessId?: string | null,
@@ -14,6 +14,7 @@ export class MetricsService {
     endDate?: string,
   ) {
     const currentYear = new Date().getFullYear();
+
     const months = [
       'Enero',
       'Febrero',
@@ -32,18 +33,29 @@ export class MetricsService {
     const start = startDate ? new Date(startDate) : new Date(`${currentYear}-01-01`);
     const end = endDate ? new Date(endDate) : new Date(`${currentYear}-12-31`);
 
+    // 🔹 Construimos filtros para las cajas registradoras
+    const cashRegisterWhere: any = {};
+    if (businessId) cashRegisterWhere.businessId = businessId;
+    if (branchId) cashRegisterWhere.branchId = branchId;
+
+    const cashRegisters = await this.service.cashRegister.findMany({
+      where: cashRegisterWhere,
+      select: { id: true },
+    });
+
+    const cashRegistersIds = cashRegisters.map((b) => b.id);
+
     // 🔹 Filtros dinámicos
     const where: any = {
       createdAt: { gte: start, lte: end },
       businessBranchPurchase: {},
     };
 
-    if (userId?.length) where.businessBranchPurchase.userId = userId;
-    if (businessId) where.businessBranchPurchase.businessId = businessId;
-    if (branchId?.length) where.businessBranchPurchase.branchId = branchId;
+    if (userId) where.businessBranchPurchase.userId = userId;
+    if (cashRegistersIds.length) where.businessBranchPurchase.cashRegisterId = { in: cashRegistersIds };
 
-    // 🔹 1️⃣ Obtener todas las compras filtradas
-    const purchases = await this.prisma.purchase.findMany({
+    // 🔹 1️⃣ Obtener compras filtradas
+    const purchases = await this.service.purchase.findMany({
       where,
       select: {
         price: true,
@@ -54,16 +66,22 @@ export class MetricsService {
             category: { select: { id: true, name: true } },
           },
         },
+        businessBranchPurchase: {
+          select: {
+            cashRegisterId: true,
+            userId: true,
+          },
+        },
       },
     });
 
-    // 🔹 2️⃣ Obtener todas las categorías disponibles
-    const allCategories = await this.prisma.productCategory.findMany({
+    // 🔹 2️⃣ Obtener todas las categorías
+    const allCategories = await this.service.productCategory.findMany({
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });
 
-    // 🔹 3️⃣ Inicializamos estructura: meses x categorías con total 0
+    // 🔹 3️⃣ Inicializamos estructura base (meses × categorías)
     const grouped: Record<string, Record<string, number>> = {};
     for (const month of months) {
       grouped[month] = {};
@@ -72,19 +90,21 @@ export class MetricsService {
       }
     }
 
-    // 🔹 4️⃣ Llenamos los totales reales
+    // 🔹 4️⃣ Llenamos los totales
     purchases.forEach((purchase) => {
       const monthName = purchase.createdAt.toLocaleString('es-ES', { month: 'long' });
-      const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-      const category = purchase.product?.category?.name ?? 'Sin categoría';
+      const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
 
-      // Si la categoría no existe aún (por ejemplo "Sin categoría"), la agregamos
+      const category = purchase.product?.category?.name ?? 'Sin categoría';
+      const total = (purchase.unitsOrMeasures ?? 0) * (purchase.price ?? 0);
+
+      if (!grouped[monthCapitalized]) grouped[monthCapitalized] = {};
       if (!grouped[monthCapitalized][category]) grouped[monthCapitalized][category] = 0;
 
-      grouped[monthCapitalized][category] += purchase.unitsOrMeasures * purchase.price;
+      grouped[monthCapitalized][category] += total;
     });
 
-    // 🔹 5️⃣ Formateamos resultado para el frontend
+    // 🔹 5️⃣ Formateamos resultado para frontend
     const result = months.map((month) => ({
       month,
       categories: Object.entries(grouped[month]).map(([category, total]) => ({
@@ -95,6 +115,7 @@ export class MetricsService {
 
     return result;
   }
+
   async getInvestmentsByCategory(businessId?: string, branchId?: string) {
     const currentYear = new Date().getFullYear();
 
@@ -115,9 +136,9 @@ export class MetricsService {
     ];
 
     // 1️⃣ Obtener todos los stocks con su producto y categoría
-    const stocks = await this.prisma.productStock.findMany({
+    const stocks = await this.service.productStock.findMany({
       where: {
-        branch: branchId ? { id: branchId, businessId } : { businessId },
+        branchId: branchId,
       },
       select: {
         branchId: true,
@@ -142,7 +163,7 @@ export class MetricsService {
     });
 
     // 2️⃣ Obtener todas las categorías (para incluir las sin inversión)
-    const allCategories = await this.prisma.productCategory.findMany({
+    const allCategories = await this.service.productCategory.findMany({
       select: { id: true, name: true },
     });
 

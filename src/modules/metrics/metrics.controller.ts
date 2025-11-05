@@ -23,7 +23,6 @@ export class MetricsController {
       endDate,
     );
   }
-
   @Get('investments-by-category')
   @UseGuards(JwtAuthGuard)
   async getInvestmentsByCategory(

@@ -32,6 +32,8 @@ enum ProductPacking {
   bolsa
   caja
   paquete
+  envase
+  otro
 }
 
 enum UnitMeasurement {

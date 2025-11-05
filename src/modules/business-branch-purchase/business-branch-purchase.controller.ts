@@ -21,40 +21,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class BusinessBranchPurchaseController {
   constructor(private readonly service: BusinessBranchPurchaseService) {}
 
-  /* @Post()
+  @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Req() req: any, @Body() dto: CreateBusinessBranchPurchaseDto) {
+  create(@Body() dto: CreateBusinessBranchPurchaseDto) {
     return this.service.create(dto);
-  }
-
-  @Get()
-  @UseGuards(JwtAuthGuard)
-  getByFilters(
-    @Query('cashRegisterId') cashRegisterId: string = '',
-    @Query('page') page = 1,
-    @Query('pageSize') pageSize = 10,
-    @Query('search') search = '',
-    @Query('status') status = '',
-    @Query('dateKey') dateKey = 'createdAt',
-    @Query('startDate') startDate = '',
-    @Query('endDate') endDate = '',
-  ): Promise<PaginatedBusinessBranchPurchaseResponseDto> {
-    return this.service.getByFilters(
-      cashRegisterId,
-      +page,
-      +pageSize,
-      search,
-      status,
-      dateKey,
-      startDate,
-      endDate,
-    );
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.service.deleteById(id);
   }
   // 📊 Obtener resumen de compras por usuario
   @Get('summary')
@@ -71,11 +41,41 @@ export class BusinessBranchPurchaseController {
   async myLastPurchase(@Req() req: any) {
     return this.service.myLastPurchase(req.user.sub);
   }
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  getByFilters(
+    @Query('branchId') branchId: string = '',
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 10,
+    @Query('search') search = '',
+    @Query('status') status = '',
+    @Query('dateKey') dateKey = 'createdAt',
+    @Query('startDate') startDate = '',
+    @Query('endDate') endDate = '',
+  ): Promise<PaginatedBusinessBranchPurchaseResponseDto> {
+    return this.service.getByFilters(
+      branchId,
+      +page,
+      +pageSize,
+      search,
+      status,
+      dateKey,
+      startDate,
+      endDate,
+    );
+  }
   @Get('my-last-sale')
   @UseGuards(JwtAuthGuard)
   async myLastSale(@Query('businessId') businessId: string, @Query('branchId') branchId: string) {
     return this.service.myLastSale(businessId, branchId);
   }
+  /*
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id') id: string) {
+    return this.service.deleteById(id);
+  }
+  
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
