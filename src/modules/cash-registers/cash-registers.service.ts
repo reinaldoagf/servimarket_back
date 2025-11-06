@@ -123,7 +123,90 @@ export class CashRegistersService {
       data: dto,
     });
   }
+  async closeSales(id: string) {
+    // 🔹 1️⃣ Verificar si la caja existe
+    const cashRegister = await this.service.cashRegister.findUnique({
+      where: { id },
+    });
 
+    if (!cashRegister) {
+      throw new NotFoundException(`CashRegister with ID ${id} not found`);
+    }
+
+    // 🔹 2️⃣ Buscar ventas pendientes (sin fecha de cierre)
+    const pendingSales = await this.service.businessBranchPurchase.findMany({
+      where: {
+        cashRegisterId: id,
+        closingDate: null,
+      },
+      select: {
+        id: true,
+        clientName: true,
+        clientDNI: true,
+        totalAmount: true,
+        amountCancelled: true,
+        createdAt: true,
+        status: true,
+        cashRegister: {
+          select: {
+            id: true,
+            description: true,
+            branchId: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 🔹 3️⃣ Si no hay ventas pendientes, avisamos
+    if (!pendingSales.length) {
+      return {
+        message: 'No pending sales to close for this cash register',
+        cashRegister: {
+          id: cashRegister.id,
+          description: cashRegister.description,
+          branchId: cashRegister.branchId,
+          createdAt: cashRegister.createdAt,
+        },
+        closedCount: 0,
+      };
+    }
+
+    // 🔹 4️⃣ Actualizamos todas las ventas pendientes con la fecha actual
+    const now = new Date();
+    await this.service.businessBranchPurchase.updateMany({
+      where: {
+        cashRegisterId: id,
+        closingDate: null,
+      },
+      data: { closingDate: now },
+    });
+
+    // 🔹 5️⃣ Calcular totales cerrados
+    const totalClosedAmount = pendingSales.reduce((acc, sale) => acc + (sale.totalAmount || 0), 0);
+
+    // 🔹 6️⃣ Retornar resumen
+    return {
+      message: 'Sales successfully closed',
+      closedCount: pendingSales.length,
+      totalClosedAmount,
+      closingDate: now,
+      cashRegister: {
+        id: cashRegister.id,
+        description: cashRegister.description,
+        branchId: cashRegister.branchId,
+        createdAt: cashRegister.createdAt,
+      },
+      closedSales: pendingSales,
+    };
+  }
   // 🔹 Obtener ventas pendientes de cierre asociadas a una caja
   async salesToClose(id: string) {
     // Verificar si la caja existe

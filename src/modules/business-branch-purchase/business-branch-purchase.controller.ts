@@ -69,7 +69,6 @@ export class BusinessBranchPurchaseController {
   async myLastSale(@Query('businessId') businessId: string, @Query('branchId') branchId: string) {
     return this.service.myLastSale(businessId, branchId);
   }
-  
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {

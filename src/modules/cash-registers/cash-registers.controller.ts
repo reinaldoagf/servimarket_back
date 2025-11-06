@@ -41,6 +41,11 @@ export class CashRegistersController {
   async salesToClose(@Param('id') id: string) {
     return this.service.salesToClose(id);
   }
+  @Get(':id/close-sales')
+  @UseGuards(JwtAuthGuard)
+  async closeSales(@Param('id') id: string) {
+    return this.service.closeSales(id);
+  }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async delete(@Param('id') id: string) {
