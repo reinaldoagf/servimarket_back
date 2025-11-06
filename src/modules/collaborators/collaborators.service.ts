@@ -99,7 +99,7 @@ export class CollaboratorsService {
               id: true,
               description: true,
             },
-          },
+          }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -154,7 +154,7 @@ export class CollaboratorsService {
       data: {
         branchId: dto.branchId,
         userId: dto.userId,
-        cashRegisterId: dto.cashRegisterId,
+        cashRegisterId: dto.cashRegisterId ?? null,
         isAdmin: dto.isAdmin || branch?.business?.ownerId === dto.userId,
       },
     });

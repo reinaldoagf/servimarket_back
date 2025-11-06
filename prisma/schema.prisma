@@ -353,6 +353,7 @@ model BusinessBranchPurchase {
   amountCancelled  Float
   totalAmount      Float
   expiredDate      DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
+  closingDate      DateTime?
   status           PurchaseStatus  @default(pendiente)
   purchases        Purchase[]
   createdAt        DateTime        @default(now())

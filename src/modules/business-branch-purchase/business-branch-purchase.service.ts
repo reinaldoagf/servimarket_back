@@ -377,7 +377,7 @@ export class BusinessBranchPurchaseService {
       totalPages: Math.ceil(total / pageSize),
     };
   }
-   async myLastSale(businessId?: string, branchId?: string) {
+  async myLastSale(businessId?: string, branchId?: string) {
     // 🔹 Construimos filtros dinámicos
     const where: any = {};
 

@@ -7,7 +7,7 @@ import { CreatePendingDto } from './dto/create-pending.dto';
 
 @Injectable()
 export class PendingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
     branchId?: string | null,
@@ -24,7 +24,9 @@ export class PendingsService {
     const where: Prisma.PendingWhereInput = {};
 
     // 🔹 Filtro por businessId si existe
-    if (businessId) {
+    if (branchId?.length) {
+      where.branchId = branchId; // 👈 ya existe como campo directo en BusinessBranchCollaborator
+    } else if (businessId) {
       const branchFilter: Prisma.BusinessBranchWhereInput = {
         businessId: { equals: businessId },
       };
@@ -62,8 +64,8 @@ export class PendingsService {
     }
 
     const [total, pendings] = await Promise.all([
-      this.prisma.pending.count({ where }),
-      this.prisma.pending.findMany({
+      this.service.pending.count({ where }),
+      this.service.pending.findMany({
         where,
         include: {
           createdBy: {
@@ -132,10 +134,9 @@ export class PendingsService {
       totalPages: Math.ceil(total / pageSize),
     };
   }
-
   async addPending(dto: CreatePendingDto) {
     // Crear el pendiente
-    return this.prisma.pending.create({
+    return this.service.pending.create({
       data: {
         title: dto.title,
         message: dto.message,
@@ -150,7 +151,7 @@ export class PendingsService {
 
   async deletePending(id: string) {
     // Verificar si existe antes de eliminar
-    const client = await this.prisma.pending.findUnique({
+    const client = await this.service.pending.findUnique({
       where: { id },
     });
 
@@ -158,7 +159,7 @@ export class PendingsService {
       throw new NotFoundException(`Client with ID ${id} not found`);
     }
 
-    return this.prisma.pending.delete({
+    return this.service.pending.delete({
       where: { id },
     });
   }

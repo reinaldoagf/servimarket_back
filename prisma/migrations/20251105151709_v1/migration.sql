@@ -102,7 +102,7 @@ CREATE TABLE `ProductPresentation` (
     `id` VARCHAR(191) NOT NULL,
     `flavor` VARCHAR(191) NULL,
     `measurementQuantity` DOUBLE NOT NULL,
-    `packing` ENUM('botella', 'bolsa', 'caja', 'paquete') NOT NULL DEFAULT 'bolsa',
+    `packing` ENUM('botella', 'bolsa', 'caja', 'paquete', 'envase', 'otro') NOT NULL DEFAULT 'bolsa',
     `productId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -272,6 +272,7 @@ CREATE TABLE `BusinessBranchPurchase` (
     `amountCancelled` DOUBLE NOT NULL,
     `totalAmount` DOUBLE NOT NULL,
     `expiredDate` DATETIME(3) NULL,
+    `closingDate` DATETIME(3) NULL,
     `status` ENUM('pendiente', 'pagado', 'caducado') NOT NULL DEFAULT 'pendiente',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 

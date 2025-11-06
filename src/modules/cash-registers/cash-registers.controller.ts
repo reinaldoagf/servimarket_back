@@ -36,6 +36,11 @@ export class CashRegistersController {
   async create(@Body() dto: CreateCashRegisterDto) {
     return this.service.addCashRegister(dto);
   }
+  @Get(':id/sales-to-close')
+  @UseGuards(JwtAuthGuard)
+  async salesToClose(@Param('id') id: string) {
+    return this.service.salesToClose(id);
+  }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async delete(@Param('id') id: string) {

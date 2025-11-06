@@ -1,7 +1,7 @@
 // src/business/business.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { BusinessBranch, Prisma } from '@prisma/client';
 import { PaginatedBusinessResponseDto } from './dto/paginated-business-response.dto';
 
 interface CreateBusinessInput {
@@ -30,7 +30,7 @@ const SELECT_FIELDS = {
 
 @Injectable()
 export class BusinessService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getByFilters(
     country = '',
@@ -82,8 +82,8 @@ export class BusinessService {
     }
 
     const [total, data] = await Promise.all([
-      this.prisma.business.count({ where }),
-      this.prisma.business.findMany({
+      this.service.business.count({ where }),
+      this.service.business.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -102,7 +102,7 @@ export class BusinessService {
   }
 
   async create(input: CreateBusinessInput) {
-    const owner = await this.prisma.user.findUnique({
+    const owner = await this.service.user.findUnique({
       where: { id: input.ownerId },
     });
 
@@ -115,7 +115,7 @@ export class BusinessService {
     expiredDate.setMonth(expiredDate.getMonth() + 1);
 
     try {
-      return await this.prisma.business.create({
+      const business = await this.service.business.create({
         data: {
           name: input.name,
           rif: input.rif,
@@ -140,6 +140,28 @@ export class BusinessService {
           owner: true,
         },
       });
+
+       // 🔹 Buscar todas las sucursales creadas
+      const branches = await this.service.businessBranch.findMany({
+        where: { businessId: business.id },
+        select: { id: true },
+      });
+
+      // 🔹 Crear los colaboradores administradores (de forma concurrente y controlada)
+      await Promise.all(
+        branches.map((b: BusinessBranch) =>
+          this.service.businessBranchCollaborator.create({
+            data: {
+              branchId: b.id,
+              userId: input.ownerId,
+              cashRegisterId: null,
+              isAdmin: true,
+            },
+          }),
+        ),
+      );
+
+      return business;
     } catch (err: any) {
       throw new BadRequestException(`Error creating business: ${err.message}`);
     }
@@ -147,12 +169,12 @@ export class BusinessService {
 
   async delete(id: string) {
     // Verificar si existe antes de eliminar
-    const business = await this.prisma.business.findUnique({ where: { id } });
+    const business = await this.service.business.findUnique({ where: { id } });
 
     if (!business) {
       throw new NotFoundException(`Business with ID ${id} not found`);
     }
-    const branches = await this.prisma.businessBranch.findMany({
+    const branches = await this.service.businessBranch.findMany({
       where: { businessId: id },
       select: { id: true },
     });
@@ -161,30 +183,30 @@ export class BusinessService {
 
     // 🔹 Si existen dependencias (ejemplo: pendings ligados a branchId), borrarlas primero
     if (branchIds.length > 0) {
-      await this.prisma.productStock.deleteMany({
+      await this.service.productStock.deleteMany({
         where: { branchId: { in: branchIds } },
       });
-      await this.prisma.businessBranchCollaborator.deleteMany({
+      await this.service.businessBranchCollaborator.deleteMany({
         where: { branchId: { in: branchIds } },
       });
-      await this.prisma.businessBranchClient.deleteMany({
+      await this.service.businessBranchClient.deleteMany({
         where: { branchId: { in: branchIds } },
       });
-      await this.prisma.businessBranchSupplier.deleteMany({
+      await this.service.businessBranchSupplier.deleteMany({
         where: { branchId: { in: branchIds } },
       });
-      await this.prisma.pending.deleteMany({
+      await this.service.pending.deleteMany({
         where: { branchId: { in: branchIds } },
       });
     }
 
     // 🔹 Luego borrar los branches
-    await this.prisma.businessBranch.deleteMany({
+    await this.service.businessBranch.deleteMany({
       where: { businessId: id },
     });
 
     // 🔹 Finalmente borrar el business
-    return this.prisma.business.delete({
+    return this.service.business.delete({
       where: { id },
     });
   }

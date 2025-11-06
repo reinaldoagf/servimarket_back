@@ -7,6 +7,20 @@ import { PaginatedCashRegisterResponseDto } from './dto/paginated-cash-register-
 
 @Injectable()
 export class CashRegistersService {
+  private readonly SELECT_FIELDS = {
+    select: {
+      id: true,
+      description: true,
+      branch: {
+        select: {
+          id: true,
+          city: true,
+          state: true,
+          country: true,
+        },
+      },
+    },
+  };
   constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
@@ -108,6 +122,57 @@ export class CashRegistersService {
     return this.service.cashRegister.create({
       data: dto,
     });
+  }
+
+  // 🔹 Obtener ventas pendientes de cierre asociadas a una caja
+  async salesToClose(id: string) {
+    // Verificar si la caja existe
+    const cashRegister = await this.service.cashRegister.findUnique({
+      where: { id },
+    });
+
+    if (!cashRegister) {
+      throw new NotFoundException(`CashRegister with ID ${id} not found`);
+    }
+
+    // Consultar ventas asociadas con closingDate == null
+    const pendingSales = await this.service.businessBranchPurchase.findMany({
+      where: {
+        cashRegisterId: id,
+        closingDate: null,
+      },
+      select: {
+        id: true,
+        clientName: true,
+        clientDNI: true,
+        totalAmount: true,
+        amountCancelled: true,
+        createdAt: true,
+        status: true,
+        cashRegister: this.SELECT_FIELDS,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      cashRegister: {
+        id: cashRegister.id,
+        description: cashRegister.description,
+        branchId: cashRegister.branchId,
+        createdAt: cashRegister.createdAt,
+      },
+      totalSales: pendingSales.length,
+      totalAmount: pendingSales.reduce((acc, s) => acc + s.totalAmount, 0),
+      totalCancelled: pendingSales.reduce((acc, s) => acc + s.amountCancelled, 0),
+      pendingSales,
+    };
   }
 
   async deleteCashRegister(id: string) {
