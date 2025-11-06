@@ -12,6 +12,7 @@ export class ClientsController {
   @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('businessId') businessId: string = '',
+    @Query('branchId') branchId: string = '',
     @Query('page', ParseIntPipe) page = '1',
     @Query('size', ParseIntPipe) pageSize = '10',
     @Query('search') search = '',
@@ -22,6 +23,7 @@ export class ClientsController {
   ): Promise<PaginatedClientResponseDto> {
     return this.service.getByFilters(
       businessId,
+      branchId,
       Number(page),
       Number(pageSize),
       search,
