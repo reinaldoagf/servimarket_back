@@ -400,6 +400,22 @@ export class BusinessBranchPurchaseService {
 
     return lastSale;
   }
+
+  async update(id: string, dto: UpdateBusinessBranchPurchaseDto) {
+    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
+
+    if (!purchase) {
+      throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
+    }
+
+    return this.service.businessBranchPurchase.update({
+      where: { id },
+      data: {
+        amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
+        status: dto.amountCancelled == purchase.totalAmount ? 'pagado' : purchase.status,
+      },
+    });
+  }
   /* 
   async deleteById(id: string) {
     const existing = await this.service.businessBranchPurchase.findUnique({
@@ -419,21 +435,6 @@ export class BusinessBranchPurchaseService {
 
   
 
-  async update(id: string, dto: UpdateBusinessBranchPurchaseDto) {
-    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
-
-    if (!purchase) {
-      throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
-    }
-
-    return this.service.businessBranchPurchase.update({
-      where: { id },
-      data: {
-        amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
-        status: dto.amountCancelled == purchase.totalAmount ? 'pagado' : purchase.status,
-      },
-    });
-  }
 
   
 

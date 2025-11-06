@@ -69,16 +69,17 @@ export class BusinessBranchPurchaseController {
   async myLastSale(@Query('businessId') businessId: string, @Query('branchId') branchId: string) {
     return this.service.myLastSale(businessId, branchId);
   }
+  
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
+    return this.service.update(id, dto);
+  } 
   /*
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
     return this.service.deleteById(id);
   }
-  
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
-    return this.service.update(id, dto);
-  } */
+  */
 }
