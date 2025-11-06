@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ProductCategory } from '@prisma/client';
 
 @Injectable()
 export class MetricsService {
@@ -33,7 +32,6 @@ export class MetricsService {
     const start = startDate ? new Date(startDate) : new Date(`${currentYear}-01-01`);
     const end = endDate ? new Date(endDate) : new Date(`${currentYear}-12-31`);
 
-    // 🔹 Construimos filtros para las cajas registradoras
     const cashRegisterWhere: any = {};
     if (businessId) cashRegisterWhere.businessId = businessId;
     if (branchId) cashRegisterWhere.branchId = branchId;
@@ -101,7 +99,7 @@ export class MetricsService {
       if (!grouped[monthCapitalized]) grouped[monthCapitalized] = {};
       if (!grouped[monthCapitalized][category]) grouped[monthCapitalized][category] = 0;
 
-      grouped[monthCapitalized][category] += total;
+      if (cashRegistersIds.length) grouped[monthCapitalized][category] += total;
     });
 
     // 🔹 5️⃣ Formateamos resultado para frontend

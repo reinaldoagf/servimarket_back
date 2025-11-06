@@ -73,7 +73,7 @@ export class BusinessBranchPurchaseController {
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
     return this.service.update(id, dto);
-  } 
+  }
   /*
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
