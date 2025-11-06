@@ -228,7 +228,9 @@ CREATE TABLE `BusinessBranchCollaborator` (
 -- CreateTable
 CREATE TABLE `BusinessBranchClient` (
     `id` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
+    `clientName` VARCHAR(191) NULL,
+    `clientDNI` VARCHAR(191) NULL,
+    `userId` VARCHAR(191) NULL,
     `branchId` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -387,7 +389,7 @@ ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollabora
 ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BusinessBranchClient` ADD CONSTRAINT `BusinessBranchClient_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `BusinessBranchClient` ADD CONSTRAINT `BusinessBranchClient_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchClient` ADD CONSTRAINT `BusinessBranchClient_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -102,6 +102,8 @@ export class ClientsService {
       id: c.id,
       user: c.user,
       branch: c.branch,
+      clientName: c.clientName,
+      clientDNI: c.clientDNI,
       createdAt: c.createdAt,
     }));
 
@@ -142,7 +144,9 @@ export class ClientsService {
     return this.prisma.businessBranchClient.create({
       data: {
         branchId: dto.branchId,
-        userId: dto.userId,
+        clientName: dto.clientName ?? null,
+        clientDNI: dto.clientDNI ?? null,
+        userId: dto.userId ?? null,
       },
     });
   }

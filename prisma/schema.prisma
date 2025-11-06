@@ -308,12 +308,14 @@ model BusinessBranchCollaborator {
 }
 
 model BusinessBranchClient {
-  id        String         @id @default(uuid())
-  userId    String
-  branchId  String
-  user      User           @relation(fields: [userId], references: [id])
-  branch    BusinessBranch @relation(fields: [branchId], references: [id])
-  createdAt DateTime       @default(now())
+  id          String          @id @default(uuid())
+  clientName  String?
+  clientDNI   String?
+  userId      String?
+  branchId    String
+  user        User?           @relation(fields: [userId], references: [id])
+  branch      BusinessBranch  @relation(fields: [branchId], references: [id])
+  createdAt   DateTime        @default(now())
 }
 
 model BusinessBranchSupplier {

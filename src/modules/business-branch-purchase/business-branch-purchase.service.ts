@@ -124,15 +124,21 @@ export class BusinessBranchPurchaseService {
     const isPartialPayment = dto.amountCancelled < dto.totalAmount;
     const branchId = cashRegister.branchId;
 
-    if (isPartialPayment && branchId && dto.userId) {
+    console.log({isPartialPayment})
+    console.log({branchId})
+    console.log({userId: dto.userId})
+
+    if (isPartialPayment && branchId && dto.clientDNI) {
       const existingClient = await this.service.businessBranchClient.findFirst({
-        where: { branchId, userId: dto.userId },
+        where: { branchId, clientDNI: dto.clientDNI },
       });
 
       if (!existingClient) {
         await this.clientsService.addClient({
           branchId,
-          userId: dto.userId,
+          clientName: dto.clientName,
+          clientDNI: dto.clientDNI,
+          userId: dto.userId ?? null,
         });
       }
     }
