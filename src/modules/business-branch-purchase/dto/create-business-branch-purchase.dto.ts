@@ -58,4 +58,7 @@ export class CreateBusinessBranchPurchaseDto {
   @Type(() => PurchaseItemDto)
   @ArrayMinSize(1)
   purchases: PurchaseItemDto[];
+
+  @IsString()
+  currency: string;
 }

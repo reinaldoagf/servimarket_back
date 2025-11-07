@@ -124,10 +124,6 @@ export class BusinessBranchPurchaseService {
     const isPartialPayment = dto.amountCancelled < dto.totalAmount;
     const branchId = cashRegister.branchId;
 
-    console.log({isPartialPayment})
-    console.log({branchId})
-    console.log({userId: dto.userId})
-
     if (isPartialPayment && branchId && dto.clientDNI) {
       const existingClient = await this.service.businessBranchClient.findFirst({
         where: { branchId, clientDNI: dto.clientDNI },

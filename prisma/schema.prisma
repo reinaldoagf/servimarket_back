@@ -170,7 +170,7 @@ model Product {
 }
 
 model ProductPresentation {
-  id                     String   @id @default(uuid())
+  id                     String         @id @default(uuid())
   flavor                 String?
   measurementQuantity    Float
   packing                ProductPacking  @default(bolsa)
