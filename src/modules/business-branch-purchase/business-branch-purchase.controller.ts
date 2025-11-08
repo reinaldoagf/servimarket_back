@@ -41,6 +41,14 @@ export class BusinessBranchPurchaseController {
   async myLastPurchase(@Req() req: any) {
     return this.service.myLastPurchase(req.user.sub);
   }
+  @Get('search-pendings')
+  @UseGuards(JwtAuthGuard)
+  async searchPendings(
+    @Req() req: any,
+    @Query('branchId') branchId: string = '',
+    @Query('search') search: string = '') {
+    return this.service.searchPendings(req.user.sub, branchId, search);
+  }
   @Get()
   @UseGuards(JwtAuthGuard)
   getByFilters(

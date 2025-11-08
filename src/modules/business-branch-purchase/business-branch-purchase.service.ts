@@ -294,6 +294,30 @@ export class BusinessBranchPurchaseService {
     return lastPurchase;
   }
 
+  async searchPendings(sub: string, branchId: string, search: string) {
+    const collaborator = await this.service.businessBranchCollaborator.findFirst({
+      where: { userId: sub, branchId: branchId },
+    });
+    if (!collaborator) {
+      throw new NotFoundException('You must be a branch employee to obtain this information');
+    }
+    const where: Prisma.BusinessBranchPurchaseWhereInput = {};
+    where.status = 'pendiente';
+
+    // 🔹 Filtro por búsqueda general
+    if (search) {
+      where.OR = [
+        { user: { dni: search } },
+        { clientDNI: search },
+      ];
+    }
+    return this.service.businessBranchPurchase.findMany({
+      where,
+      select: this.SELECT_FIELDS,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getByFilters(
     userId: string = '',
     branchId: string = '',
