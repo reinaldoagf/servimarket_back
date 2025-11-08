@@ -44,6 +44,7 @@ export class BusinessBranchPurchaseController {
   @Get()
   @UseGuards(JwtAuthGuard)
   getByFilters(
+    @Query('userId') userId: string = '',
     @Query('branchId') branchId: string = '',
     @Query('page') page = 1,
     @Query('pageSize') pageSize = 10,
@@ -54,6 +55,7 @@ export class BusinessBranchPurchaseController {
     @Query('endDate') endDate = '',
   ): Promise<PaginatedBusinessBranchPurchaseResponseDto> {
     return this.service.getByFilters(
+      userId,
       branchId,
       +page,
       +pageSize,

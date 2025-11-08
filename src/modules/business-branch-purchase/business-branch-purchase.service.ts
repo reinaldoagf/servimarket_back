@@ -295,6 +295,7 @@ export class BusinessBranchPurchaseService {
   }
 
   async getByFilters(
+    userId: string = '',
     branchId: string = '',
     page = 1,
     pageSize = 10,
@@ -316,7 +317,10 @@ export class BusinessBranchPurchaseService {
     }
 
     const where: Prisma.BusinessBranchPurchaseWhereInput = {};
-
+    // 🔹 Filtro por branchId (nuevo)
+    if (userId?.length) {
+      where.userId = userId;
+    }
     // 🔹 Filtro por branchId (nuevo)
     if (branchId?.length) {
       where.cashRegister = {
