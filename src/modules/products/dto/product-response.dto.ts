@@ -10,14 +10,6 @@ export class ProductTagDto {
   createdAt: Date;
 }
 
-export class ProductPresentationDto {
-  id: string;
-  flavor?: string | null;
-  measurementQuantity: number;
-  packing: ProductPacking;
-  createdAt: Date;
-}
-
 export class ProductResponseDto {
   id: string;
   name: string;
@@ -31,6 +23,5 @@ export class ProductResponseDto {
   businessId?: string | null;
   business?: BusinessResponseDto | null;
   tags?: ProductTagDto[];
-  presentations?: ProductPresentationDto[];
   createdAt: Date;
 }

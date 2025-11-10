@@ -26,7 +26,7 @@ const SELECT_FIELDS = {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getByFilters(
     page = 1,
@@ -71,8 +71,8 @@ export class UsersService {
     }
 
     const [total, data] = await Promise.all([
-      this.prisma.user.count({ where }),
-      this.prisma.user.findMany({
+      this.service.user.count({ where }),
+      this.service.user.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -91,7 +91,7 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<UserResponseDto | null> {
-    return this.prisma.user.findUnique({
+    return this.service.user.findUnique({
       where: { id: id },
       select: SELECT_FIELDS,
     });
@@ -113,7 +113,7 @@ export class UsersService {
       status: dto.status,
     };
 
-    const user = await this.prisma.user.create({ data });
+    const user = await this.service.user.create({ data });
 
     return user;
   }

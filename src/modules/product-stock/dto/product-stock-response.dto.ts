@@ -1,6 +1,5 @@
 // dto/product-stock-response.dto.ts
 import { ProductResponseDto } from '../../products/dto/product-response.dto';
-import { ProductPresentationDto } from '../../products/dto/product-response.dto';
 
 export class ProductStockResponseDto {
   id: string;
@@ -13,8 +12,6 @@ export class ProductStockResponseDto {
   purchasePricePerUnit: number;
   profitPercentage: number;
   returnOnInvestment: number;
-  productPresentationId?: string | null;
-  productPresentation?: ProductPresentationDto | null;
   productId: string | null;
   product: ProductResponseDto | null;
   branchId: string;

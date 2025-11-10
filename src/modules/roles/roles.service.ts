@@ -20,7 +20,7 @@ const SELECT_FIELDS = {
 
 @Injectable()
 export class RolesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getByFilters(page = 1, size = 10, search = ''): Promise<PaginatedRoleResponseDto> {
     const skip = (page - 1) * size;
@@ -30,8 +30,8 @@ export class RolesService {
       : {};
 
     const [total, data] = await Promise.all([
-      this.prisma.role.count({ where }),
-      this.prisma.role.findMany({
+      this.service.role.count({ where }),
+      this.service.role.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -50,7 +50,7 @@ export class RolesService {
   }
 
   async getById(id: string) {
-    const role = await this.prisma.role.findUnique({
+    const role = await this.service.role.findUnique({
       where: { id },
       select: SELECT_FIELDS,
     });
@@ -69,7 +69,7 @@ export class RolesService {
       throw new BadRequestException(`Invalid permissions: ${invalid.join(', ')}`);
     }
 
-    return await this.prisma.$transaction(async (tx) => {
+    return await this.service.$transaction(async (tx) => {
       // Verificar key único
       const existing = await tx.role.findUnique({ where: { key } });
       if (existing) {
@@ -116,7 +116,7 @@ export class RolesService {
   async update(id: string, dto: UpdateRoleDto) {
     const { name, key, pages = [], permissions = [] } = dto;
 
-    const existing = await this.prisma.role.findUnique({ where: { id } });
+    const existing = await this.service.role.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`Role with ID ${id} not found`);
 
     const validPerms = Object.values(PermissionType) as string[];
@@ -126,7 +126,7 @@ export class RolesService {
     }
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      return await this.service.$transaction(async (tx) => {
         // Actualizar datos básicos
         await tx.role.update({
           where: { id },
@@ -175,23 +175,23 @@ export class RolesService {
   async delete(id: string) {
     try {
       // 🔹 Verificar si el rol existe
-      const role = await this.prisma.role.findUnique({ where: { id } });
+      const role = await this.service.role.findUnique({ where: { id } });
       if (!role) {
         throw new NotFoundException(`Role with ID ${id} not found`);
       }
 
       // 🔹 Eliminar las páginas asociadas
-      await this.prisma.rolePage.deleteMany({
+      await this.service.rolePage.deleteMany({
         where: { roleId: id },
       });
 
       // 🔹 Eliminar los permisos asociados
-      await this.prisma.rolePermission.deleteMany({
+      await this.service.rolePermission.deleteMany({
         where: { roleId: id },
       });
 
       // 🔹 Finalmente eliminar el rol
-      await this.prisma.role.delete({ where: { id } });
+      await this.service.role.delete({ where: { id } });
 
       return { message: 'Role deleted successfully' };
     } catch (err) {
@@ -201,7 +201,7 @@ export class RolesService {
 
   async updatePermissions(id: string, permissionIds: string[]) {
     try {
-      const role = await this.prisma.role.update({
+      const role = await this.service.role.update({
         where: { id },
         data: {
           permissions: {
@@ -225,7 +225,7 @@ export class RolesService {
 
   async updatePages(id: string, pages: string[]) {
     try {
-      const role = await this.prisma.role.update({
+      const role = await this.service.role.update({
         where: { id },
         data: {
           pages: {

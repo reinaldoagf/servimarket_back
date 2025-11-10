@@ -85,27 +85,19 @@ CREATE TABLE `ProductCategory` (
 CREATE TABLE `Product` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
+    `flavor` VARCHAR(191) NULL,
+    `smell` VARCHAR(191) NULL,
+    `measurement` INTEGER NULL,
+    `unitMeasurement` ENUM('miligramos', 'gramos', 'kilogramos', 'mililitros', 'litros', 'kilolitros') NULL DEFAULT 'gramos',
+    `priceCalculation` ENUM('unidad', 'unidadDeMedida') NULL DEFAULT 'unidad',
     `status` ENUM('activo', 'inactivo', 'revisar') NOT NULL DEFAULT 'activo',
-    `unitMeasurement` ENUM('litros', 'gramos') NULL DEFAULT 'gramos',
-    `priceCalculation` ENUM('presentacion', 'cantidad', 'unidadDeMedida') NULL DEFAULT 'presentacion',
     `categoryId` VARCHAR(191) NULL,
     `brandId` VARCHAR(191) NULL,
     `businessRef` VARCHAR(191) NULL,
     `businessId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `ProductPresentation` (
-    `id` VARCHAR(191) NOT NULL,
-    `flavor` VARCHAR(191) NULL,
-    `measurementQuantity` DOUBLE NOT NULL,
-    `packing` ENUM('botella', 'bolsa', 'caja', 'paquete', 'envase', 'otro') NOT NULL DEFAULT 'bolsa',
-    `productId` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-
+    UNIQUE INDEX `Product_name_flavor_smell_measurement_key`(`name`, `flavor`, `smell`, `measurement`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -122,22 +114,16 @@ CREATE TABLE `ProductTag` (
 -- CreateTable
 CREATE TABLE `ProductStock` (
     `id` VARCHAR(191) NOT NULL,
-    `units` INTEGER NOT NULL DEFAULT 0,
-    `priceByUnit` DOUBLE NULL DEFAULT 0.0,
-    `availableQuantity` DOUBLE NULL DEFAULT 0.0,
-    `priceByMeasurement` DOUBLE NULL DEFAULT 0.0,
-    `quantityPerMeasure` DOUBLE NULL DEFAULT 0.0,
-    `totalSellingPrice` DOUBLE NOT NULL DEFAULT 0.0,
-    `purchasePricePerUnit` DOUBLE NOT NULL DEFAULT 0.0,
+    `availables` DOUBLE NOT NULL DEFAULT 0.0,
+    `salePrice` DOUBLE NOT NULL DEFAULT 0.0,
+    `purchasePrice` DOUBLE NOT NULL DEFAULT 0.0,
     `profitPercentage` DOUBLE NOT NULL DEFAULT 0.0,
     `returnOnInvestment` DOUBLE NOT NULL DEFAULT 0.0,
-    `description` VARCHAR(191) NULL,
-    `productPresentationId` VARCHAR(191) NULL,
     `productId` VARCHAR(191) NOT NULL,
     `branchId` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `ProductStock_productId_branchId_productPresentationId_key`(`productId`, `branchId`, `productPresentationId`),
+    UNIQUE INDEX `ProductStock_productId_branchId_key`(`productId`, `branchId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -252,7 +238,6 @@ CREATE TABLE `Purchase` (
     `id` VARCHAR(191) NOT NULL,
     `businessBranchPurchaseId` VARCHAR(191) NOT NULL,
     `productId` VARCHAR(191) NOT NULL,
-    `productPresentationId` VARCHAR(191) NULL,
     `unitsOrMeasures` DOUBLE NOT NULL DEFAULT 1.0,
     `price` DOUBLE NOT NULL DEFAULT 0.0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -336,13 +321,7 @@ ALTER TABLE `Product` ADD CONSTRAINT `Product_brandId_fkey` FOREIGN KEY (`brandI
 ALTER TABLE `Product` ADD CONSTRAINT `Product_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductPresentation` ADD CONSTRAINT `ProductPresentation_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `ProductTag` ADD CONSTRAINT `ProductTag_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_productPresentationId_fkey` FOREIGN KEY (`productPresentationId`) REFERENCES `ProductPresentation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -406,9 +385,6 @@ ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_businessBranchPurchaseId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productPresentationId_fkey` FOREIGN KEY (`productPresentationId`) REFERENCES `ProductPresentation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

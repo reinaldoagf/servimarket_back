@@ -140,13 +140,11 @@ export class MetricsService {
       },
       select: {
         branchId: true,
-        availableQuantity: true,
-        priceByUnit: true,
-        priceByMeasurement: true,
-        quantityPerMeasure: true,
-        totalSellingPrice: true,
-        purchasePricePerUnit: true,
-        units: true,
+        availables: true,
+        salePrice: true,
+        purchasePrice: true,
+        profitPercentage: true,
+        returnOnInvestment: true,
         createdAt: true,
         product: {
           select: {
@@ -178,22 +176,7 @@ export class MetricsService {
       if (!grouped[branchKey][monthKey]) grouped[branchKey][monthKey] = {};
       if (!grouped[branchKey][monthKey][categoryKey]) grouped[branchKey][monthKey][categoryKey] = 0;
 
-      const priceCalculation = stock.product?.priceCalculation ?? null;
-      if (priceCalculation) {
-        let inversion = 0;
-        switch (priceCalculation) {
-          case 'cantidad':
-            inversion = (stock.priceByUnit ?? 0) * (stock.availableQuantity ?? 0);
-            break;
-          case 'unidadDeMedida':
-            inversion = (stock.priceByMeasurement ?? 0) * (stock.quantityPerMeasure ?? 0);
-            break;
-          case 'presentacion':
-            inversion = (stock.totalSellingPrice ?? 0) * (stock.units ?? 0);
-            break;
-        }
-        grouped[branchKey][monthKey][categoryKey] += inversion;
-      }
+      grouped[branchKey][monthKey][categoryKey] += ((stock.salePrice ?? 0) * (stock.availables ?? 0));
     }
 
     // 4️⃣ Asegurar que todos los meses y categorías existan (aunque sea con 0 inversión)

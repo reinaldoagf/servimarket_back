@@ -41,12 +41,10 @@ export class BusinessBranchPurchaseResponseDto {
 
   purchases?: {
     id: string;
-    productId: string;
-    productPresentationId?: string | null;
     unitsOrMeasures: number;
     price: number;
+    productId: string;
+    product: { id: string; name: string };
     createdAt: Date;
-    product?: { id: string; name: string };
-    productPresentation?: { id: string; measurementQuantity: number; packing: string | null; flavor?: string | null } | null;
   }[];
 }

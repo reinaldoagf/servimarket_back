@@ -9,17 +9,20 @@ import { PaginatedProductResponseDto } from './dto/paginated-product-response.dt
 const SELECT_FIELDS = {
   id: true,
   name: true,
+  flavor: true,
+  smell: true,
   status: true,
   createdAt: true,
   brandId: true,
   categoryId: true,
   businessId: true,
   priceCalculation: true,
+  measurement: true,
   unitMeasurement: true,
   brand: { select: { id: true, name: true, createdAt: true } },
   category: { select: { id: true, name: true, createdAt: true } },
   business: { select: { id: true, name: true, createdAt: true } },
-  stocks: {
+  /* stocks: {
     select: {
       id: true,
       units: true,
@@ -27,31 +30,21 @@ const SELECT_FIELDS = {
       purchasePricePerUnit: true,
       profitPercentage: true,
       returnOnInvestment: true,
-      productPresentationId: true,
       createdAt: true,
     },
-  },
+  }, */
   tags: {
     select: {
       id: true,
       tag: true,
       createdAt: true,
     },
-  },
-  presentations: {
-    select: {
-      id: true,
-      flavor: true,
-      measurementQuantity: true,
-      packing: true,
-      createdAt: true,
-    },
-  },
+  }
 };
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getByFilters(
     businessId?: string | null,
@@ -69,7 +62,13 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {};
 
     if (search) {
-      where.OR = [{ name: { contains: search } }];
+      where.OR = [
+        { name: { contains: search } },
+        { flavor: { contains: search } },
+        { smell: { contains: search } },
+        { brand:  { name: { contains: search } } },
+        { category:  { name: { contains: search } } }
+      ];
     }
     // 🔹 Filtro por businessId si existe
     if (businessId) {
@@ -99,8 +98,8 @@ export class ProductsService {
     }
 
     const [total, data] = await Promise.all([
-      this.prisma.product.count({ where }),
-      this.prisma.product.findMany({
+      this.service.product.count({ where }),
+      this.service.product.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -120,7 +119,7 @@ export class ProductsService {
 
   // ✅ Buscar uno por ID
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
+    const product = await this.service.product.findUnique({
       where: { id },
       select: SELECT_FIELDS,
     });
@@ -132,10 +131,13 @@ export class ProductsService {
   async addProduct(dto: CreateProductDto) {
     try {
       // Crear producto junto con presentaciones si vienen
-      const product = await this.prisma.product.create({
+      const product = await this.service.product.create({
         data: {
           name: dto.name,
-          priceCalculation: dto.priceCalculation ?? 'presentacion',
+          flavor: dto.flavor ?? null,
+          smell: dto.smell ?? null,
+          measurement: dto.measurement ?? null,
+          priceCalculation: dto.priceCalculation ?? 'unidad',
           unitMeasurement: dto.unitMeasurement,
           brandId: dto.brandId ?? null,
           categoryId: dto.categoryId ?? null,
@@ -143,21 +145,8 @@ export class ProductsService {
           status: dto.businessId ? 'revisar' : (dto.status ?? null),
           tags: dto.tags?.length
             ? { create: dto.tags.map((p) => ({ tag: p.tag ?? null })) }
-            : undefined,
-          presentations:
-            dto.priceCalculation == 'presentacion' && dto.presentations?.length
-              ? {
-                  create: dto.presentations.map((p) => ({
-                    flavor: p.flavor ?? null,
-                    measurementQuantity: p.measurementQuantity ?? null,
-                    packing: p.packing ?? null,
-                  })),
-                }
-              : undefined,
-        },
-        include: {
-          presentations: true,
-        },
+            : undefined
+        }
       });
 
       return product;
@@ -168,11 +157,14 @@ export class ProductsService {
 
   async updateProduct(id: string, dto: UpdateProductDto) {
     try {
-      const product = await this.prisma.product.update({
+      const product = await this.service.product.update({
         where: { id },
         data: {
           name: dto.name,
-          priceCalculation: dto.priceCalculation ?? 'presentacion',
+          flavor: dto.flavor,
+          smell: dto.smell,
+          measurement: dto.measurement ?? null,
+          priceCalculation: dto.priceCalculation ?? 'unidad',
           unitMeasurement: dto.unitMeasurement,
           brandId: dto.brandId ?? null,
           categoryId: dto.categoryId ?? null,
@@ -184,28 +176,8 @@ export class ProductsService {
               dto.tags?.map((p) => ({
                 tag: p.tag ?? null,
               })) || [],
-          },
-
-          // 🔹 Manejo de presentaciones
-          presentations: dto.priceCalculation == 'presentacion' 
-          ? {
-                // Borra las anteriores y crea las nuevas
-                deleteMany: {},
-                create:
-                  dto.presentations?.map((p) => ({
-                    flavor: p.flavor ?? null,
-                    measurementQuantity: p.measurementQuantity ?? null,
-                    packing: p.packing ?? null,
-                  })) || [],
-              }
-            : {
-                // Si ya no tiene presentaciones, las eliminamos
-                deleteMany: {},
-              },
-        },
-        include: {
-          presentations: true,
-        },
+          }
+        }
       });
 
       return product;
@@ -216,7 +188,7 @@ export class ProductsService {
 
   async deleteProduct(id: string) {
     // Verificar si existe antes de eliminar
-    const product = await this.prisma.product.findUnique({
+    const product = await this.service.product.findUnique({
       where: { id },
     });
 
@@ -225,34 +197,19 @@ export class ProductsService {
     }
 
     // 🔹 Buscar todos los branches asociados al negocio
-    const tags = await this.prisma.productTag.findMany({
+    const tags = await this.service.productTag.findMany({
       where: { productId: id },
       select: { id: true },
     });
     const tagsIds = tags.map((b) => b.id);
     // 🔹 Si existen dependencias (ejemplo: pendings ligados a branchId), borrarlas primero
     if (tagsIds.length > 0) {
-      await this.prisma.productTag.deleteMany({
+      await this.service.productTag.deleteMany({
         where: { productId: { in: tagsIds } },
       });
     }
 
-    // 🔹 Buscar todos los branches asociados al negocio
-    const presentations = await this.prisma.productPresentation.findMany({
-      where: { productId: id },
-      select: { id: true },
-    });
-
-    const presentationsIds = presentations.map((b) => b.id);
-
-    // 🔹 Si existen dependencias (ejemplo: pendings ligados a branchId), borrarlas primero
-    if (presentationsIds.length > 0) {
-      await this.prisma.productPresentation.deleteMany({
-        where: { productId: { in: presentationsIds } },
-      });
-    }
-
-    return this.prisma.product.delete({
+    return this.service.product.delete({
       where: { id },
     });
   }

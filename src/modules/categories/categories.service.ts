@@ -14,7 +14,7 @@ const SELECT_FIELDS = {
 
 @Injectable()
 export class CategoriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   async getByFilters(
     page = 1,
@@ -49,8 +49,8 @@ export class CategoriesService {
     }
 
     const [total, data] = await Promise.all([
-      this.prisma.productCategory.count({ where }),
-      this.prisma.productCategory.findMany({
+      this.service.productCategory.count({ where }),
+      this.service.productCategory.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -70,7 +70,7 @@ export class CategoriesService {
 
   async addCategory(dto: CreateCategoryDto) {
     // Crear el colaborador
-    return this.prisma.productCategory.create({
+    return this.service.productCategory.create({
       data: {
         name: dto.name,
       },
@@ -78,13 +78,13 @@ export class CategoriesService {
   }
 
   async updateCategory(id: string, dto: UpdateCategoryDto) {
-    const category = await this.prisma.productCategory.findUnique({ where: { id } });
+    const category = await this.service.productCategory.findUnique({ where: { id } });
 
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    return this.prisma.productCategory.update({
+    return this.service.productCategory.update({
       where: { id },
       data: {
         name: dto.name ?? category.name,
@@ -93,7 +93,7 @@ export class CategoriesService {
   }
   async deleteCategory(id: string) {
     // Verificar si existe antes de eliminar
-    const category = await this.prisma.productCategory.findUnique({
+    const category = await this.service.productCategory.findUnique({
       where: { id },
     });
 
@@ -101,7 +101,7 @@ export class CategoriesService {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    return this.prisma.productCategory.delete({
+    return this.service.productCategory.delete({
       where: { id },
     });
   }

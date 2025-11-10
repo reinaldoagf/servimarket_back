@@ -7,7 +7,7 @@ import { PaginatedSupplierResponseDto } from './dto/paginated-supplier-response.
 
 @Injectable()
 export class SuppliersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
     page = 1,
@@ -62,8 +62,8 @@ export class SuppliersService {
     }
 
     const [total, suppliers] = await Promise.all([
-      this.prisma.businessBranchSupplier.count({ where }),
-      this.prisma.businessBranchSupplier.findMany({
+      this.service.businessBranchSupplier.count({ where }),
+      this.service.businessBranchSupplier.findMany({
         where,
         include: {
           user: {
@@ -115,7 +115,7 @@ export class SuppliersService {
   }
 
   async addSupplier(dto: CreateSupplierDto) {
-    const branch = await this.prisma.businessBranch.findUnique({
+    const branch = await this.service.businessBranch.findUnique({
       where: { id: dto.branchId },
       include: { business: true },
     });
@@ -130,7 +130,7 @@ export class SuppliersService {
     }
 
     // Validar si ya existe
-    const existing = await this.prisma.businessBranchSupplier.findFirst({
+    const existing = await this.service.businessBranchSupplier.findFirst({
       where: { branchId: dto.branchId, userId: dto.userId },
     });
 
@@ -139,7 +139,7 @@ export class SuppliersService {
     }
 
     // Crear el colaborador
-    return this.prisma.businessBranchSupplier.create({
+    return this.service.businessBranchSupplier.create({
       data: {
         branchId: dto.branchId,
         userId: dto.userId,
@@ -148,7 +148,7 @@ export class SuppliersService {
   }
   async deleteSupplier(id: string) {
     // Verificar si existe antes de eliminar
-    const supplier = await this.prisma.businessBranchSupplier.findUnique({
+    const supplier = await this.service.businessBranchSupplier.findUnique({
       where: { id },
     });
 
@@ -156,7 +156,7 @@ export class SuppliersService {
       throw new NotFoundException(`Supplier with ID ${id} not found`);
     }
 
-    return this.prisma.businessBranchSupplier.delete({
+    return this.service.businessBranchSupplier.delete({
       where: { id },
     });
   }

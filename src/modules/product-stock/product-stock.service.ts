@@ -16,8 +16,6 @@ const SELECT_FIELDS = {
   purchasePricePerUnit: true,
   profitPercentage: true,
   returnOnInvestment: true,
-  productPresentationId: true,
-  productPresentation: true,
   productId: true,
   product: {
     select: {
@@ -44,7 +42,7 @@ const SELECT_FIELDS = {
 
 @Injectable()
 export class ProductStockService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
 
   // ✅ Obtener por filtros
   async getByFilters(
@@ -62,7 +60,7 @@ export class ProductStockService {
     const where: Prisma.ProductStockWhereInput = {};
 
     if (branchId?.length) {
-      const existing = await this.prisma.businessBranch.findUnique({ where: { id: branchId } });
+      const existing = await this.service.businessBranch.findUnique({ where: { id: branchId } });
       if (!existing) throw new NotFoundException(`BusinessBranch with ID ${branchId} not found`);
       where.branchId = branchId;
     }
@@ -70,7 +68,8 @@ export class ProductStockService {
     if (search) {
       where.OR = [
         { product: { name: { contains: search } } },
-        { productPresentation: { flavor: { contains: search } } },
+        { product: { flavor: { contains: search } } },
+        { product: { smell: { contains: search } } },
       ];
     }
 
@@ -90,12 +89,12 @@ export class ProductStockService {
     }
 
     const [total, distinctProducts, data] = await Promise.all([
-      this.prisma.productStock.count({ where }),
-      this.prisma.productStock.groupBy({
+      this.service.productStock.count({ where }),
+      this.service.productStock.groupBy({
         by: ['productId'],
         where,
       }),
-      this.prisma.productStock.findMany({
+      this.service.productStock.findMany({
         where,
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
@@ -117,13 +116,12 @@ export class ProductStockService {
 
   // ✅ Crear nuevo registro
   async create(dto: CreateProductStockDto) {
-    const { productId, branchId, productPresentationId } = dto;
+    const { productId, branchId } = dto;
     // Verificar existencia previa
-    const existing = await this.prisma.productStock.findFirst({
+    const existing = await this.service.productStock.findFirst({
       where: {
         productId,
         branchId,
-        productPresentationId: productPresentationId ?? null, // trata null como null literal
       },
     });
 
@@ -134,23 +132,17 @@ export class ProductStockService {
     }
 
     try {
-      return await this.prisma.productStock.create({
+      return await this.service.productStock.create({
         data: {
-          units: dto.units,
-          priceByUnit: dto.priceByUnit ?? 0,
-          availableQuantity: dto.availableQuantity ?? 0,
-          priceByMeasurement: dto.priceByMeasurement ?? 0,
-          quantityPerMeasure: dto.quantityPerMeasure ?? 0,
-          totalSellingPrice: dto.totalSellingPrice,
-          purchasePricePerUnit: dto.purchasePricePerUnit,
+          availables: dto.availables,
+          salePrice: dto.salePrice ?? 0,
+          purchasePrice: dto.purchasePrice ?? 0,
           profitPercentage: dto.profitPercentage,
           returnOnInvestment: dto.returnOnInvestment,
-          productPresentationId: dto.productPresentationId ?? null,
           productId: dto.productId,
           branchId: dto.branchId,
         },
         include: {
-          productPresentation: true,
           product: true,
         },
       });
@@ -161,16 +153,15 @@ export class ProductStockService {
 
   // ✅ Actualizar registro
   async update(id: string, dto: UpdateProductStockDto) {
-    const existing = await this.prisma.productStock.findUnique({ where: { id } });
+    const existing = await this.service.productStock.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`ProductStock with ID ${id} not found`);
     try {
-      return await this.prisma.productStock.update({
+      return await this.service.productStock.update({
         where: { id },
         data: {
           ...dto,
         },
         include: {
-          productPresentation: true,
           product: true,
         },
       });
@@ -181,22 +172,22 @@ export class ProductStockService {
 
   // ✅ Eliminar registro
   async remove(id: string) {
-    const existing = await this.prisma.productStock.findUnique({ where: { id } });
+    const existing = await this.service.productStock.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`ProductStock with ID ${id} not found`);
 
-    await this.prisma.productStock.delete({ where: { id } });
+    await this.service.productStock.delete({ where: { id } });
     return { message: `ProductStock with ID ${id} deleted successfully` };
   }
 
   // ✅ Eliminar registros
   async deleteProductStockByBranch(branchId: string, productId: string) {
-    const branch = await this.prisma.businessBranch.findUnique({ where: { id: branchId } });
+    const branch = await this.service.businessBranch.findUnique({ where: { id: branchId } });
     if (!branch) throw new NotFoundException(`BusinessBranch with ID ${branchId} not found`);
 
-    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    const product = await this.service.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException(`Product with ID ${productId} not found`);
 
-    const deleted = await this.prisma.productStock.deleteMany({
+    const deleted = await this.service.productStock.deleteMany({
       where: { branchId, productId },
     });
 

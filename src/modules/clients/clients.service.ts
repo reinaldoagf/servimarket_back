@@ -7,7 +7,7 @@ import { PaginatedClientResponseDto } from './dto/paginated-client-response.dto'
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
     branchId?: string | null,
@@ -64,8 +64,8 @@ export class ClientsService {
     }
 
     const [total, clients] = await Promise.all([
-      this.prisma.businessBranchClient.count({ where }),
-      this.prisma.businessBranchClient.findMany({
+      this.service.businessBranchClient.count({ where }),
+      this.service.businessBranchClient.findMany({
         where,
         include: {
           user: {
@@ -119,7 +119,7 @@ export class ClientsService {
   }
 
   async addClient(dto: CreateClientDto) {
-    const branch = await this.prisma.businessBranch.findUnique({
+    const branch = await this.service.businessBranch.findUnique({
       where: { id: dto.branchId },
       include: { business: true },
     });
@@ -134,7 +134,7 @@ export class ClientsService {
     }
 
     // Validar si ya existe
-    const existing = await this.prisma.businessBranchClient.findFirst({
+    const existing = await this.service.businessBranchClient.findFirst({
       where: { branchId: dto.branchId, userId: dto.userId },
     });
 
@@ -143,7 +143,7 @@ export class ClientsService {
     }
 
     // Crear el colaborador
-    return this.prisma.businessBranchClient.create({
+    return this.service.businessBranchClient.create({
       data: {
         branchId: dto.branchId,
         clientName: dto.clientName ?? null,
@@ -154,7 +154,7 @@ export class ClientsService {
   }
   async deleteClient(id: string) {
     // Verificar si existe antes de eliminar
-    const client = await this.prisma.businessBranchClient.findUnique({
+    const client = await this.service.businessBranchClient.findUnique({
       where: { id },
     });
 
@@ -162,7 +162,7 @@ export class ClientsService {
       throw new NotFoundException(`Client with ID ${id} not found`);
     }
 
-    return this.prisma.businessBranchClient.delete({
+    return this.service.businessBranchClient.delete({
       where: { id },
     });
   }

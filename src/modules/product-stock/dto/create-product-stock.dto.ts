@@ -3,34 +3,17 @@ import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 export class CreateProductStockDto {
   @IsInt()
   @Min(0)
-  units: number;
+  availables: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  priceByUnit?: number;
+  salePrice: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  availableQuantity?: number;
-
-  @IsNumber()
-  @Min(0)
-  priceByMeasurement: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  quantityPerMeasure?: number;
-
-  @IsNumber()
-  @Min(0)
-  totalSellingPrice: number;
-
-  @IsNumber()
-  @Min(0)
-  purchasePricePerUnit: number;
+  purchasePrice: number;
 
   @IsNumber()
   @Min(0)
@@ -43,10 +26,6 @@ export class CreateProductStockDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  productPresentationId?: string;
 
   @IsString()
   productId: string;

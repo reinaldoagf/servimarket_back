@@ -35,14 +35,6 @@ export class BusinessBranchPurchaseService {
             },
           },
         },
-        productPresentation: {
-          select: {
-            id: true,
-            flavor: true,
-            measurementQuantity: true,
-            packing: true,
-          },
-        },
       },
     },
   };
@@ -81,14 +73,10 @@ export class BusinessBranchPurchaseService {
       select: {
         id: true,
         productId: true,
-        productPresentationId: true,
         unitsOrMeasures: true,
         price: true,
         createdAt: true,
         product: { select: { id: true, name: true } },
-        productPresentation: {
-          select: { id: true, measurementQuantity: true, flavor: true, packing: true },
-        },
       },
     },
   };
@@ -152,7 +140,6 @@ export class BusinessBranchPurchaseService {
         purchases: {
           create: dto.purchases.map((item) => ({
             productId: item.productId,
-            productPresentationId: item.productPresentationId ?? null,
             unitsOrMeasures: item.unitsOrMeasures,
             price: item.price,
           })),
