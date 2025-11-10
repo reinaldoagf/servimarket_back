@@ -285,6 +285,7 @@ CREATE TABLE `BusinessBranchPurchase` (
 CREATE TABLE `Setting` (
     `id` VARCHAR(191) NOT NULL,
     `key` VARCHAR(191) NOT NULL,
+    `country` VARCHAR(191) NOT NULL DEFAULT 'venezuela',
     `floatValue` DOUBLE NULL,
     `stringValue` VARCHAR(191) NULL,
     `userId` VARCHAR(191) NULL,
@@ -292,7 +293,7 @@ CREATE TABLE `Setting` (
     `branchId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Setting_key_key`(`key`),
+    UNIQUE INDEX `Setting_key_userId_businessId_branchId_key`(`key`, `userId`, `businessId`, `branchId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

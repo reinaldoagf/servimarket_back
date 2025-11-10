@@ -1,6 +1,7 @@
 // src/business/business.controller.ts
 import {
   Controller,
+  Req,
   Get,
   Query,
   Post,
@@ -23,6 +24,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('business')
 export class BusinessController {
   constructor(private readonly service: BusinessService) {}
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getById(@Req() req: any, @Param('id') id: string) {
+    const requestingUserID = req.user.sub; // viene del payload del JWT
+    return this.service.getById(requestingUserID, id);
+  }
 
   @Get('/')
   @UseGuards(JwtAuthGuard)

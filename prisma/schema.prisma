@@ -241,11 +241,11 @@ model SubscriptionPlan {
 }
 
 model Business {
-  id                        String   @id @default(uuid())
+  id                        String            @id @default(uuid())
   rif                       String?
   logo                      String?
-  ownerId                   String   @unique
-  owner                     User     @relation("BusinessOwner", fields: [ownerId], references: [id])
+  ownerId                   String            @unique
+  owner                     User              @relation("BusinessOwner", fields: [ownerId], references: [id])
   name                      String
   description               String
   branches                  BusinessBranch[]
@@ -363,7 +363,8 @@ model BusinessBranchPurchase {
 
 model Setting {
   id               String          @id @default(uuid())
-  key              String          @unique
+  key              String
+  country          String          @default("venezuela")
   floatValue       Float?
   stringValue      String?
   userId           String?
@@ -373,6 +374,8 @@ model Setting {
   branchId         String?
   branch           BusinessBranch? @relation(fields: [branchId], references: [id])
   createdAt        DateTime        @default(now())
+
+  @@unique([key, userId, businessId, branchId])
 }
 
 model Currency {

@@ -32,6 +32,15 @@ const SELECT_FIELDS = {
 export class BusinessService {
   constructor(private service: PrismaService) {}
 
+  async getById(requestingUserID: string, id: string) {
+    const business = await this.service.business.findUnique({
+      where: { id, ownerId: requestingUserID },
+      select: SELECT_FIELDS,
+    });
+    if (!business) throw new NotFoundException(`Business with id ${id} not found`);
+    return business;
+  }
+
   async getByFilters(
     country = '',
     state = '',
@@ -85,7 +94,14 @@ export class BusinessService {
       this.service.business.count({ where }),
       this.service.business.findMany({
         where,
-        select: SELECT_FIELDS,
+        select: {
+          ...SELECT_FIELDS,
+          subscriptionPlan: false,
+          subscriptionDate: false,
+          expirationDate: false,
+          owner: false,
+          settings: false,
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: pageSize,
@@ -141,7 +157,15 @@ export class BusinessService {
         },
       });
 
-       // 🔹 Buscar todas las sucursales creadas
+      await this.service.setting.create({
+        data: {
+          key: 'profit_percentage',
+          floatValue: 16,
+          businessId: business.id,
+        },
+      });
+
+      // 🔹 Buscar todas las sucursales creadas
       const branches = await this.service.businessBranch.findMany({
         where: { businessId: business.id },
         select: { id: true },

@@ -1,8 +1,9 @@
 // settings.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { SettingResponseDto } from './dto/setting-response.dto';
+import { UpdateSettingDto } from './dto/update-setting.dto';
 
 const SELECT_FIELDS = {
   id: true,
@@ -41,5 +42,21 @@ export class SettingsService {
     });
 
     return settings;
+  }
+
+  async updateSetting(id: string, dto: UpdateSettingDto) {
+    try {
+      const setting = await this.service.setting.update({
+        where: { id },
+        data: {
+          key: dto.key,
+          floatValue: dto.floatValue,
+          stringValue: dto.stringValue,
+        },
+      });
+      return setting;
+    } catch (err: any) {
+      throw new BadRequestException(`Error updating setting: ${err.message}`);
+    }
   }
 }
