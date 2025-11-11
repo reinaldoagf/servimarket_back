@@ -3,13 +3,9 @@ import { ProductResponseDto } from '../../products/dto/product-response.dto';
 
 export class ProductStockResponseDto {
   id: string;
-  units: number;
-  priceByUnit: number | null;
-  availableQuantity: number | null;
-  priceByMeasurement: number | null;
-  quantityPerMeasure: number | null;
-  totalSellingPrice: number;
-  purchasePricePerUnit: number;
+  availables: number;
+  salePrice: number;
+  purchasePrice: number;
   profitPercentage: number;
   returnOnInvestment: number;
   productId: string | null;
