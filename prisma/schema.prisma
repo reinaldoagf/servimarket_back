@@ -37,12 +37,8 @@ enum ProductPacking {
 }
 
 enum UnitMeasurement {
-  miligramos
   gramos
-  kilogramos
-  mililitros
   litros
-  kilolitros
 }
 
 enum PriceCalculation {
@@ -198,6 +194,7 @@ model ProductStock {
   branchId             String
   branch               BusinessBranch   @relation(fields: [branchId], references: [id])
   createdAt            DateTime         @default(now())
+  purchases            Purchase[]
   
   @@unique([productId, branchId])
 }
@@ -322,6 +319,9 @@ model Purchase {
   businessBranchPurchase     BusinessBranchPurchase  @relation(fields: [businessBranchPurchaseId], references: [id])
   productId                  String
   product                    Product                 @relation(fields: [productId], references: [id])
+  productStockRef            String?
+  productStockId             String
+  productStock               ProductStock            @relation(fields: [productStockId], references: [id])
   unitsOrMeasures            Float                   @default(1.0)
   price                      Float                   @default(0.0)
   createdAt                  DateTime                @default(now())

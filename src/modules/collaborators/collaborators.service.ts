@@ -47,12 +47,12 @@ export class CollaboratorsService {
       ];
     }
 
-    if (status) {
+    /* if (status) {
       where.user = {
         ...where.user,
         status: status as any,
       };
-    }
+    } */
 
     if (startDate && endDate) {
       where[dateKey] = {

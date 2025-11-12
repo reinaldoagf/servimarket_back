@@ -5,22 +5,23 @@ import { Prisma } from '@prisma/client';
 import { CreateCashRegisterDto } from './dto/create-cash-register.dto';
 import { PaginatedCashRegisterResponseDto } from './dto/paginated-cash-register-response.dto';
 
-@Injectable()
-export class CashRegistersService {
-  private readonly SELECT_FIELDS = {
-    select: {
-      id: true,
-      description: true,
-      branch: {
-        select: {
-          id: true,
-          city: true,
-          state: true,
-          country: true,
-        },
+const SELECT_FIELDS = {
+  select: {
+    id: true,
+    description: true,
+    branch: {
+      select: {
+        id: true,
+        city: true,
+        state: true,
+        country: true,
       },
     },
-  };
+  },
+};
+
+@Injectable()
+export class CashRegistersService {
   constructor(private service: PrismaService) {}
   async getByFilters(
     businessId?: string | null,
@@ -232,7 +233,7 @@ export class CashRegistersService {
         amountCancelled: true,
         createdAt: true,
         status: true,
-        cashRegister: this.SELECT_FIELDS,
+        cashRegister: SELECT_FIELDS,
         user: {
           select: {
             id: true,

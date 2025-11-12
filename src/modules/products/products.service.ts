@@ -66,8 +66,8 @@ export class ProductsService {
         { name: { contains: search } },
         { flavor: { contains: search } },
         { smell: { contains: search } },
-        { brand:  { name: { contains: search } } },
-        { category:  { name: { contains: search } } }
+        { brand: { name: { contains: search } } },
+        { category: { name: { contains: search } } },
       ];
     }
     // 🔹 Filtro por businessId si existe

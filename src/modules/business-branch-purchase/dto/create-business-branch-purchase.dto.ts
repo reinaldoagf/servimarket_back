@@ -17,6 +17,9 @@ class PurchaseItemDto {
   @IsString()
   productId: string;
 
+  @IsString()
+  productStockId: string;
+
   @IsNumber()
   @IsPositive() // Optional: further restrict to positive floats
   unitsOrMeasures: number;

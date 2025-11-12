@@ -88,8 +88,9 @@ CREATE TABLE `Product` (
     `flavor` VARCHAR(191) NULL,
     `smell` VARCHAR(191) NULL,
     `measurement` INTEGER NULL,
-    `unitMeasurement` ENUM('miligramos', 'gramos', 'kilogramos', 'mililitros', 'litros', 'kilolitros') NULL DEFAULT 'gramos',
+    `unitMeasurement` ENUM('gramos', 'litros') NULL DEFAULT 'gramos',
     `priceCalculation` ENUM('unidad', 'unidadDeMedida') NULL DEFAULT 'unidad',
+    `packing` ENUM('botella', 'bolsa', 'caja', 'paquete', 'envase', 'otro') NOT NULL DEFAULT 'bolsa',
     `status` ENUM('activo', 'inactivo', 'revisar') NOT NULL DEFAULT 'activo',
     `categoryId` VARCHAR(191) NULL,
     `brandId` VARCHAR(191) NULL,
@@ -238,6 +239,8 @@ CREATE TABLE `Purchase` (
     `id` VARCHAR(191) NOT NULL,
     `businessBranchPurchaseId` VARCHAR(191) NOT NULL,
     `productId` VARCHAR(191) NOT NULL,
+    `productStockRef` VARCHAR(191) NULL,
+    `productStockId` VARCHAR(191) NOT NULL,
     `unitsOrMeasures` DOUBLE NOT NULL DEFAULT 1.0,
     `price` DOUBLE NOT NULL DEFAULT 0.0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -385,6 +388,9 @@ ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_businessBranchPurchaseId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productStockId_fkey` FOREIGN KEY (`productStockId`) REFERENCES `ProductStock`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

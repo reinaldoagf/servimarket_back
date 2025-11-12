@@ -6,14 +6,7 @@ import { Prisma } from '@prisma/client';
 import { ClientsService } from '../clients/clients.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
 
-@Injectable()
-export class BusinessBranchPurchaseService {
-  constructor(
-    private readonly service: PrismaService,
-    private clientsService: ClientsService,
-  ) {}
-
-  private readonly INCLUDE_FIELDS = {
+  const INCLUDE_FIELDS = {
     cashRegister: {
       include: {
         business: { select: { id: true, name: true } },
@@ -39,7 +32,7 @@ export class BusinessBranchPurchaseService {
     },
   };
 
-  private readonly SELECT_FIELDS = {
+  const SELECT_FIELDS = {
     id: true,
     clientName: true,
     clientDNI: true,
@@ -80,6 +73,14 @@ export class BusinessBranchPurchaseService {
       },
     },
   };
+@Injectable()
+export class BusinessBranchPurchaseService {
+  constructor(
+    private readonly service: PrismaService,
+    private clientsService: ClientsService,
+  ) {}
+
+  
 
   async create(dto: CreateBusinessBranchPurchaseDto) {
     // 1️⃣ Validar ID de caja registradora
@@ -127,27 +128,81 @@ export class BusinessBranchPurchaseService {
       }
     }
 
-    // 5️⃣ Crear la compra principal con sus detalles
-    return this.service.businessBranchPurchase.create({
-      data: {
-        clientName: dto.clientName ?? null,
-        clientDNI: dto.clientDNI ?? null,
-        userId: dto.userId ?? null,
-        cashRegisterId: dto.cashRegisterId,
-        amountCancelled: dto.amountCancelled,
-        totalAmount: dto.totalAmount,
-        status: dto.amountCancelled === dto.totalAmount ? 'pagado' : dto.status,
-        purchases: {
-          create: dto.purchases.map((item) => ({
-            productId: item.productId,
-            unitsOrMeasures: item.unitsOrMeasures,
-            price: item.price,
-          })),
+    // ⚙️ 5️⃣ Validar disponibilidad de todos los productos antes de crear la compra
+    const unavailableProducts: string[] = [];
+
+    for (const item of dto.purchases) {
+      const stock = await this.service.productStock.findUnique({
+        where: { id: item.productStockId },
+        select: {
+          id: true,
+          availables: true,
+          product: { select: { name: true, flavor: true, smell: true, brand: { select: { name: true }} } },
         },
-      },
-      select: this.SELECT_FIELDS, // asumo que ya está definido en tu clase
+      });
+
+      if (!stock) {
+        throw new NotFoundException(`ProductStock with ID ${item.productStockId} not found`);
+      }
+
+      if (item.unitsOrMeasures > stock.availables && stock.product) {
+        unavailableProducts.push(
+          `${stock.product.name}, ${stock.product?.flavor ?? ''} ${stock.product?.smell ?? ''} ${stock.product?.brand?.name ?? ''} (disponible: ${stock.availables}, solicitado: ${item.unitsOrMeasures})`
+        );
+      }
+    }
+
+    // 🚨 Si hay al menos un producto sin stock suficiente, abortar operación
+    if (unavailableProducts.length > 0) {
+      throw new BadRequestException({
+        message: 'La compra no pudo completarse. Algunos productos no tienen suficiente stock disponible.',
+        unavailable: unavailableProducts,
+      });
+    }
+
+    // ✅ 6️⃣ Si todo está disponible, proceder con la transacción
+    return this.service.$transaction(async (tx) => {
+      // Descontar stock de todos los productos
+      for (const item of dto.purchases) {
+        await tx.productStock.update({
+          where: { id: item.productStockId },
+          data: {
+            availables: {
+              decrement: item.unitsOrMeasures,
+            },
+          },
+        });
+      }
+
+      // Crear la compra principal y sus detalles
+      const purchase = await tx.businessBranchPurchase.create({
+        data: {
+          clientName: dto.clientName ?? null,
+          clientDNI: dto.clientDNI ?? null,
+          userId: dto.userId ?? null,
+          cashRegisterId: dto.cashRegisterId,
+          amountCancelled: dto.amountCancelled,
+          totalAmount: dto.totalAmount,
+          status: dto.amountCancelled === dto.totalAmount ? 'pagado' : dto.status,
+          purchases: {
+            create: dto.purchases.map((item) => ({
+              productStockId: item.productStockId,
+              productId: item.productId,
+              unitsOrMeasures: item.unitsOrMeasures,
+              price: item.price,
+            })),
+          },
+        },
+        select: SELECT_FIELDS,
+      });
+
+      return {
+        message: 'Compra registrada exitosamente.',
+        data: purchase,
+      };
     });
   }
+
 
   async getPurchaseSummaryByFilters(businessId?: string, branchId?: string, userId?: string) {
     if (!userId && !businessId && !branchId) {
@@ -271,7 +326,7 @@ export class BusinessBranchPurchaseService {
     const lastPurchase = await this.service.businessBranchPurchase.findFirst({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: this.INCLUDE_FIELDS,
+      include: INCLUDE_FIELDS,
     });
 
     if (!lastPurchase) {
@@ -293,14 +348,11 @@ export class BusinessBranchPurchaseService {
 
     // 🔹 Filtro por búsqueda general
     if (search) {
-      where.OR = [
-        { user: { dni: search } },
-        { clientDNI: search },
-      ];
+      where.OR = [{ user: { dni: search } }, { clientDNI: search }];
     }
     return this.service.businessBranchPurchase.findMany({
       where,
-      select: this.SELECT_FIELDS,
+      select: SELECT_FIELDS,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -379,7 +431,7 @@ export class BusinessBranchPurchaseService {
       this.service.businessBranchPurchase.count({ where }),
       this.service.businessBranchPurchase.findMany({
         where,
-        select: this.SELECT_FIELDS,
+        select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
         skip,
         take: pageSize,
@@ -394,6 +446,7 @@ export class BusinessBranchPurchaseService {
       totalPages: Math.ceil(total / pageSize),
     };
   }
+
   async myLastSale(businessId?: string, branchId?: string) {
     // 🔹 Construimos filtros dinámicos
     const where: any = {};
@@ -408,7 +461,7 @@ export class BusinessBranchPurchaseService {
     const lastSale = await this.service.businessBranchPurchase.findFirst({
       where,
       orderBy: { createdAt: 'desc' },
-      include: this.INCLUDE_FIELDS,
+      include: INCLUDE_FIELDS,
     });
 
     if (!lastSale) {
@@ -433,27 +486,4 @@ export class BusinessBranchPurchaseService {
       },
     });
   }
-  /* 
-  async deleteById(id: string) {
-    const existing = await this.service.businessBranchPurchase.findUnique({
-      where: { id },
-      include: { purchases: true },
-    });
-
-    if (!existing) throw new NotFoundException(`Purchase with ID ${id} not found`);
-
-    // Eliminar primero los registros hijos (purchases)
-    await this.service.purchase.deleteMany({ where: { businessBranchPurchaseId: id } });
-
-    await this.service.businessBranchPurchase.delete({ where: { id } });
-
-    return { message: `Purchase ${id} and its items were deleted successfully.` };
-  }
-
-  
-
-
-  
-
-  */
 }

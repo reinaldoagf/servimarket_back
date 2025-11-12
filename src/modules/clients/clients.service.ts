@@ -134,8 +134,14 @@ export class ClientsService {
     }
 
     // Validar si ya existe
-    const existing = await this.service.businessBranchClient.findFirst({
-      where: { branchId: dto.branchId, userId: dto.userId },
+     const existing = await this.service.businessBranchClient.findFirst({
+      where: {
+        branchId: dto.branchId,
+        OR: [
+          { userId: dto.userId ?? undefined },
+          { clientDNI: dto.clientDNI ?? undefined },
+        ],
+      },
     });
 
     if (existing) {
