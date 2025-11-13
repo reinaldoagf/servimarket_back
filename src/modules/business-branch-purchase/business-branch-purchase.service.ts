@@ -80,8 +80,6 @@ export class BusinessBranchPurchaseService {
     private clientsService: ClientsService,
   ) {}
 
-  
-
   async create(dto: CreateBusinessBranchPurchaseDto) {
     // 1️⃣ Validar ID de caja registradora
     if (!dto.cashRegisterId?.length) {
@@ -202,7 +200,6 @@ export class BusinessBranchPurchaseService {
       };
     });
   }
-
 
   async getPurchaseSummaryByFilters(businessId?: string, branchId?: string, userId?: string) {
     if (!userId && !businessId && !branchId) {
