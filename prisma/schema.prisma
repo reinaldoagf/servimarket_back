@@ -131,6 +131,7 @@ model User {
   suppliers             BusinessBranchSupplier[]
   purchases             BusinessBranchPurchase[]
   settings              Setting[]
+  purchasesByCategory   PurchaseByCategory[]
   createdAt             DateTime        @default(now())
 }
 
@@ -142,10 +143,11 @@ model ProductBrand {
 }
 
 model ProductCategory {
-  id        String    @id @default(uuid())
-  name      String
-  products  Product[]
-  createdAt DateTime  @default(now())
+  id                  String    @id @default(uuid())
+  name                String
+  products            Product[]
+  purchasesByCategory PurchaseByCategory[]
+  createdAt           DateTime  @default(now())
 }
 
 model Product {
@@ -243,6 +245,7 @@ model Business {
   products                  Product[]
   settings                  Setting[]
   cashRegisters             CashRegister[]
+  purchases                 PurchaseByCategory[]
   // relación 1:N con usuarios (empleados/miembros)
   /* users User[] @relation("BusinessUsers") */
   createdAt                 DateTime         @default(now())
@@ -264,6 +267,7 @@ model BusinessBranch {
   pendings      Pending[]
   settings      Setting[]
   cashRegisters CashRegister[]
+  purchases     PurchaseByCategory[]
   currencyId    String?
   currency      Currency?                    @relation(fields: [currencyId], references: [id])
   createdAt     DateTime                     @default(now())
@@ -313,6 +317,24 @@ model BusinessBranchSupplier {
   createdAt DateTime       @default(now())
 }
 
+model PurchaseByCategory {
+  id            String           @id @default(uuid())
+  total         Float            @default(0.0)
+  userRef       String?
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id])
+  categoryRef   String?
+  categoryId    String?
+  category      ProductCategory? @relation(fields: [categoryId], references: [id])
+  businessRef   String?
+  businessId    String?
+  business      Business?        @relation(fields: [businessId], references: [id])
+  branchRef     String?
+  branchId      String?
+  branch        BusinessBranch?  @relation(fields: [branchId], references: [id])
+  createdAt     DateTime         @default(now())
+}
+
 model Purchase {
   id                         String                  @id @default(uuid())
   businessBranchPurchaseId   String
@@ -347,6 +369,7 @@ model BusinessBranchPurchase {
   purchases        Purchase[]
   createdAt        DateTime        @default(now())
 }
+
 
 model Setting {
   id               String          @id @default(uuid())

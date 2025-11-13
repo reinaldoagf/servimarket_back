@@ -6,73 +6,73 @@ import { Prisma } from '@prisma/client';
 import { ClientsService } from '../clients/clients.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
 
-  const INCLUDE_FIELDS = {
-    cashRegister: {
-      include: {
-        business: { select: { id: true, name: true } },
-        branch: { select: { id: true, city: true, address: true } },
-      },
+const INCLUDE_FIELDS = {
+  cashRegister: {
+    include: {
+      business: { select: { id: true, name: true } },
+      branch: { select: { id: true, city: true, address: true } },
     },
-    purchases: {
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            brand: {
-              select: {
-                id: true,
-                name: true,
-                createdAt: true,
-              },
+  },
+  purchases: {
+    include: {
+      product: {
+        select: {
+          id: true,
+          name: true,
+          brand: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
             },
           },
         },
       },
     },
-  };
+  },
+};
 
-  const SELECT_FIELDS = {
-    id: true,
-    clientName: true,
-    clientDNI: true,
-    userId: true,
-    cashRegisterId: true,
-    amountCancelled: true,
-    totalAmount: true,
-    status: true,
-    createdAt: true,
-    cashRegister: {
-      select: {
-        id: true,
-        description: true,
-        collaborator: {
-          select: {
-            id: true,
-            user: { select: { id: true, name: true, email: true, dni: true } },
-            branch: {
-              select: {
-                id: true,
-                address: true,
-                business: { select: { id: true, name: true, rif: true, logo: true } },
-              },
+const SELECT_FIELDS = {
+  id: true,
+  clientName: true,
+  clientDNI: true,
+  userId: true,
+  cashRegisterId: true,
+  amountCancelled: true,
+  totalAmount: true,
+  status: true,
+  createdAt: true,
+  cashRegister: {
+    select: {
+      id: true,
+      description: true,
+      collaborator: {
+        select: {
+          id: true,
+          user: { select: { id: true, name: true, email: true, dni: true } },
+          branch: {
+            select: {
+              id: true,
+              address: true,
+              business: { select: { id: true, name: true, rif: true, logo: true } },
             },
           },
         },
       },
     },
-    user: { select: { id: true, name: true, email: true, avatar: true } },
-    purchases: {
-      select: {
-        id: true,
-        productId: true,
-        unitsOrMeasures: true,
-        price: true,
-        createdAt: true,
-        product: { select: { id: true, name: true } },
-      },
+  },
+  user: { select: { id: true, name: true, email: true, avatar: true } },
+  purchases: {
+    select: {
+      id: true,
+      productId: true,
+      unitsOrMeasures: true,
+      price: true,
+      createdAt: true,
+      product: { select: { id: true, name: true } },
     },
-  };
+  },
+};
 @Injectable()
 export class BusinessBranchPurchaseService {
   constructor(
@@ -109,6 +109,7 @@ export class BusinessBranchPurchaseService {
 
     // 4️⃣ Si el pago es parcial, registrar cliente si no existe
     const isPartialPayment = dto.amountCancelled < dto.totalAmount;
+    const businessId = cashRegister.businessId;
     const branchId = cashRegister.branchId;
 
     if (isPartialPayment && branchId && dto.clientDNI) {
@@ -135,7 +136,16 @@ export class BusinessBranchPurchaseService {
         select: {
           id: true,
           availables: true,
-          product: { select: { name: true, flavor: true, smell: true, brand: { select: { name: true }} } },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              flavor: true,
+              smell: true,
+              brand: { select: { name: true } },
+              category: { select: { id: true } },
+            },
+          },
         },
       });
 
@@ -145,7 +155,7 @@ export class BusinessBranchPurchaseService {
 
       if (item.unitsOrMeasures > stock.availables && stock.product) {
         unavailableProducts.push(
-          `${stock.product.name}, ${stock.product?.flavor ?? ''} ${stock.product?.smell ?? ''} ${stock.product?.brand?.name ?? ''} (disponible: ${stock.availables}, solicitado: ${item.unitsOrMeasures})`
+          `${stock.product.name}, ${stock.product?.flavor ?? ''} ${stock.product?.smell ?? ''} ${stock.product?.brand?.name ?? ''} (disponible: ${stock.availables}, solicitado: ${item.unitsOrMeasures})`,
         );
       }
     }
@@ -153,26 +163,71 @@ export class BusinessBranchPurchaseService {
     // 🚨 Si hay al menos un producto sin stock suficiente, abortar operación
     if (unavailableProducts.length > 0) {
       throw new BadRequestException({
-        message: 'La compra no pudo completarse. Algunos productos no tienen suficiente stock disponible.',
+        message:
+          'La compra no pudo completarse. Algunos productos no tienen suficiente stock disponible.',
         unavailable: unavailableProducts,
       });
     }
 
     // ✅ 6️⃣ Si todo está disponible, proceder con la transacción
     return this.service.$transaction(async (tx) => {
-      // Descontar stock de todos los productos
       for (const item of dto.purchases) {
-        await tx.productStock.update({
+        // 🔹 Descontar stock
+        const updatedStock = await tx.productStock.update({
           where: { id: item.productStockId },
           data: {
-            availables: {
-              decrement: item.unitsOrMeasures,
-            },
+            availables: { decrement: item.unitsOrMeasures },
+          },
+          select: {
+            id: true,
+            product: { select: { category: { select: { id: true, name: true } } } },
           },
         });
+
+        const categoryId = updatedStock.product?.category?.id ?? null;
+        const totalToAdd = item.unitsOrMeasures * item.price;
+
+        if (categoryId) {
+          // 🔹 Buscar registro existente del mes actual
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+          const existingCategoryRecord = await tx.purchaseByCategory.findFirst({
+            where: {
+              categoryId,
+              businessId,
+              branchId,
+              userId: dto.userId ?? null,
+              createdAt: { gte: startOfMonth, lte: endOfMonth },
+            },
+            select: { id: true, total: true },
+          });
+
+          if (existingCategoryRecord) {
+            // 🔹 Si existe, incrementar el total
+            await tx.purchaseByCategory.update({
+              where: { id: existingCategoryRecord.id },
+              data: { total: { increment: totalToAdd } },
+            });
+          } else {
+            // 🔹 Si no existe, crear nuevo registro
+            await tx.purchaseByCategory.create({
+              data: {
+                categoryId,
+                businessId,
+                branchId,
+                userRef: dto.clientDNI ?? null,
+                userId: dto.userId ?? null,
+                total: totalToAdd,
+                categoryRef: updatedStock.product?.category?.name ?? businessId,
+              },
+            });
+          }
+        }
       }
 
-      // Crear la compra principal y sus detalles
+      // 🔹 Crear la compra principal y sus detalles
       const purchase = await tx.businessBranchPurchase.create({
         data: {
           clientName: dto.clientName ?? null,

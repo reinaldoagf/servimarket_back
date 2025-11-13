@@ -11,7 +11,7 @@ export class MetricsController {
   async getPurchasesByCategory(
     @Query('businessId') businessId: string = '',
     @Query('branchId') branchId: string = '',
-    @Query('userId') userId: string,
+    @Query('userId') userId: string = '',
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {

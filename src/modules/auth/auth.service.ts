@@ -80,6 +80,22 @@ export class AuthService {
         ),
       );
     }
+    // 🔹 Vincular compras existentes por DNI (si las hay)
+    const purchasesByCategory = await this.service.purchaseByCategory.findMany({
+      where: { userRef: dto.dni },
+      select: { id: true },
+    });
+    if (purchasesByCategory.length > 0) {
+      // Ejecutar todas las actualizaciones en paralelo
+      await Promise.all(
+        purchasesByCategory.map((p) =>
+          this.service.purchaseByCategory.update({
+            where: { id: p.id },
+            data: { userId: user.id },
+          }),
+        ),
+      );
+    }
 
     const token = this.signToken(user.id, user.email);
     return { access_token: token, user };
@@ -127,7 +143,6 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
-
 
     const token = this.signToken(user.id, user.email);
     return { access_token: token, user: user };

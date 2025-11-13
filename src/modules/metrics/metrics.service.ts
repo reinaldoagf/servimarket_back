@@ -5,10 +5,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class MetricsService {
   constructor(private service: PrismaService) {}
 
-  // 🧠 Caché en memoria
-  private cache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 horas
-
   async getPurchasesByCategory(
     businessId?: string | null,
     branchId?: string | null,
@@ -26,124 +22,63 @@ export class MetricsService {
     const start = startDate ? new Date(startDate) : new Date(`${currentYear}-01-01`);
     const end = endDate ? new Date(endDate) : new Date(`${currentYear}-12-31`);
 
-    const cashRegisterWhere: any = {};
-    if (businessId) cashRegisterWhere.businessId = businessId;
-    if (branchId) cashRegisterWhere.branchId = branchId;
-
-    const cashRegisters = await this.service.cashRegister.findMany({
-      where: cashRegisterWhere,
-      select: { id: true },
-    });
-    const cashRegistersIds = cashRegisters.map((b) => b.id);
-
-    // 🧠 Generar clave única de caché
-    const cacheKey = `purchases_by_category_${businessId ?? 'all'}_${branchId ?? 'all'}_${userId ?? 'all'}_${currentYear}`;
-
-    const now = Date.now();
-    const cached = this.cache.get(cacheKey);
-    const isCacheValid = cached && now - cached.timestamp < this.CACHE_TTL_MS;
-
-    let grouped: Record<string, Record<string, number>>;
-    console.log({ isCacheValid })
-    if (isCacheValid) {
-      grouped = cached.data;
-    } else {
-      // 🔹 1️⃣ Calcular datos históricos (no cambian durante el día)
-      const where: any = {
-        createdAt: { gte: start, lte: end },
-        businessBranchPurchase: {},
-      };
-
-      if (userId) where.businessBranchPurchase.userId = userId;
-      if (cashRegistersIds.length) where.businessBranchPurchase.cashRegisterId = { in: cashRegistersIds };
-
-      const purchases = await this.service.purchase.findMany({
-        where,
-        select: {
-          price: true,
-          unitsOrMeasures: true,
-          createdAt: true,
-          product: {
-            select: {
-              category: { select: { id: true, name: true } },
-            },
-          },
-        },
-      });
-
-      const allCategories = await this.service.productCategory.findMany({
-        select: { id: true, name: true },
-        orderBy: { name: 'asc' },
-      });
-
-      grouped = {};
-      for (const month of months) {
-        grouped[month] = {};
-        for (const cat of allCategories) {
-          grouped[month][cat.name] = 0;
-        }
-      }
-
-      purchases.forEach((purchase) => {
-        const monthName = purchase.createdAt.toLocaleString('es-ES', { month: 'long' });
-        const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
-        const category = purchase.product?.category?.name ?? 'Sin categoría';
-        const total = (purchase.unitsOrMeasures ?? 0) * (purchase.price ?? 0);
-        if (!grouped[monthCapitalized]) grouped[monthCapitalized] = {};
-        if (!grouped[monthCapitalized][category]) grouped[monthCapitalized][category] = 0;
-        grouped[monthCapitalized][category] += total;
-      });
-
-      // Guardar en caché
-      this.cache.set(cacheKey, { data: grouped, timestamp: now });
-    }
-
-    // 🔹 2️⃣ Calcular solo las compras del día actual
-    const today = new Date();
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
-
-    const todayWhere: any = {
-      createdAt: { gte: todayStart, lte: todayEnd },
-      businessBranchPurchase: {},
+    // 🔹 Filtro base para la tabla agregada
+    const where: any = {
+      createdAt: { gte: start, lte: end },
     };
-    if (userId) todayWhere.businessBranchPurchase.userId = userId;
-    if (cashRegistersIds.length) todayWhere.businessBranchPurchase.cashRegisterId = { in: cashRegistersIds };
+    if (businessId) where.businessId = businessId;
+    if (branchId) where.branchId = branchId;
+    if (userId) where.userId = userId;
 
-    const todayPurchases = await this.service.purchase.findMany({
-      where: todayWhere,
+    // 🔹 Consulta agrupada: mes + categoría
+   /*  const purchasesByCategory = await this.service.purchaseByCategory.groupBy({
+      by: ['categoryId'],
+      where,
+      _sum: { total: true },
+    }); */
+
+    // 🔹 Cargar las categorías relacionadas
+    const categories = await this.service.productCategory.findMany({
+      select: { id: true, name: true },
+    });
+
+    // 🔹 Obtener las compras del año actual (ordenadas por fecha)
+    const records = await this.service.purchaseByCategory.findMany({
+      where,
       select: {
-        price: true,
-        unitsOrMeasures: true,
+        total: true,
         createdAt: true,
-        product: {
-          select: {
-            category: { select: { id: true, name: true } },
-          },
-        },
+        category: { select: { id: true, name: true } },
       },
     });
 
-    // 🔹 3️⃣ Mezclar datos del día actual con los históricos
-    const resultGrouped = JSON.parse(JSON.stringify(grouped)); // clonar objeto
+    // 🔹 Inicializar estructura base
+    const grouped: Record<string, Record<string, number>> = {};
+    for (const month of months) {
+      grouped[month] = {};
+      for (const cat of categories) {
+        grouped[month][cat.name] = 0;
+      }
+    }
 
-    todayPurchases.forEach((purchase) => {
-      const monthName = purchase.createdAt.toLocaleString('es-ES', { month: 'long' });
+    // 🔹 Rellenar la estructura con los totales agrupados por mes
+    for (const record of records) {
+      const monthName = record.createdAt.toLocaleString('es-ES', { month: 'long' });
       const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
-      const category = purchase.product?.category?.name ?? 'Sin categoría';
-      const total = (purchase.unitsOrMeasures ?? 0) * (purchase.price ?? 0);
 
-      if (!resultGrouped[monthCapitalized]) resultGrouped[monthCapitalized] = {};
-      if (!resultGrouped[monthCapitalized][category]) resultGrouped[monthCapitalized][category] = 0;
-      resultGrouped[monthCapitalized][category] += total;
-    });
+      const categoryName = record.category?.name ?? 'Sin categoría';
+      const total = record.total ?? 0;
 
-    // 🔹 4️⃣ Formatear resultado para el frontend
+      if (!grouped[monthCapitalized]) grouped[monthCapitalized] = {};
+      if (!grouped[monthCapitalized][categoryName]) grouped[monthCapitalized][categoryName] = 0;
+
+      grouped[monthCapitalized][categoryName] += total;
+    }
+
+    // 🔹 Formatear resultado para el frontend
     return months.map((month) => ({
       month,
-      categories: Object.entries(resultGrouped[month] ?? {}).map(([category, total]) => ({
+      categories: Object.entries(grouped[month] ?? {}).map(([category, total]) => ({
         category,
         total,
       })),

@@ -235,6 +235,23 @@ CREATE TABLE `BusinessBranchSupplier` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `PurchaseByCategory` (
+    `id` VARCHAR(191) NOT NULL,
+    `total` DOUBLE NOT NULL DEFAULT 0.0,
+    `userRef` VARCHAR(191) NULL,
+    `userId` VARCHAR(191) NULL,
+    `categoryRef` VARCHAR(191) NULL,
+    `categoryId` VARCHAR(191) NULL,
+    `businessRef` VARCHAR(191) NULL,
+    `businessId` VARCHAR(191) NULL,
+    `branchRef` VARCHAR(191) NULL,
+    `branchId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Purchase` (
     `id` VARCHAR(191) NOT NULL,
     `businessBranchPurchaseId` VARCHAR(191) NOT NULL,
@@ -382,6 +399,18 @@ ALTER TABLE `BusinessBranchSupplier` ADD CONSTRAINT `BusinessBranchSupplier_user
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchSupplier` ADD CONSTRAINT `BusinessBranchSupplier_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PurchaseByCategory` ADD CONSTRAINT `PurchaseByCategory_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PurchaseByCategory` ADD CONSTRAINT `PurchaseByCategory_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `ProductCategory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PurchaseByCategory` ADD CONSTRAINT `PurchaseByCategory_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PurchaseByCategory` ADD CONSTRAINT `PurchaseByCategory_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_businessBranchPurchaseId_fkey` FOREIGN KEY (`businessBranchPurchaseId`) REFERENCES `BusinessBranchPurchase`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
