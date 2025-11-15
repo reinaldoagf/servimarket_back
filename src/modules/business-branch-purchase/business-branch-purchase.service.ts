@@ -5,6 +5,7 @@ import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-busi
 import { Prisma } from '@prisma/client';
 import { ClientsService } from '../clients/clients.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
+import { MetricsWsService } from '../metrics-ws/metrics-ws.service';
 
 const INCLUDE_FIELDS = {
   cashRegister: {
@@ -78,6 +79,7 @@ export class BusinessBranchPurchaseService {
   constructor(
     private readonly service: PrismaService,
     private clientsService: ClientsService,
+    private readonly metricsWs: MetricsWsService,
   ) {}
 
   async create(dto: CreateBusinessBranchPurchaseDto) {
@@ -248,6 +250,13 @@ export class BusinessBranchPurchaseService {
         },
         select: SELECT_FIELDS,
       });
+
+      if (dto.userId) {
+        this.metricsWs.emitPurchaseToUser(dto.userId, {
+          message: 'Nueva compra registrada',
+          purchase,
+        });
+      }
 
       return {
         message: 'Compra registrada exitosamente.',
