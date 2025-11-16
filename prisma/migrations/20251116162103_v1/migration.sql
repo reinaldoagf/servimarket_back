@@ -87,7 +87,7 @@ CREATE TABLE `Product` (
     `name` VARCHAR(191) NOT NULL,
     `flavor` VARCHAR(191) NULL,
     `smell` VARCHAR(191) NULL,
-    `measurement` INTEGER NULL,
+    `measurement` DOUBLE NULL,
     `unitMeasurement` ENUM('gramos', 'litros') NULL DEFAULT 'gramos',
     `priceCalculation` ENUM('unidad', 'unidadDeMedida') NULL DEFAULT 'unidad',
     `packing` ENUM('botella', 'bolsa', 'caja', 'paquete', 'envase', 'otro') NOT NULL DEFAULT 'bolsa',

@@ -37,8 +37,12 @@ enum ProductPacking {
 }
 
 enum UnitMeasurement {
+  kilogramos
   gramos
+  miligramos
+  kilolitros
   litros
+  mililitros
 }
 
 enum PriceCalculation {
@@ -137,14 +141,14 @@ model User {
 
 model ProductBrand {
   id        String    @id @default(uuid())
-  name      String
+  name      String    @unique
   products  Product[]
   createdAt DateTime  @default(now())
 }
 
 model ProductCategory {
   id                  String    @id @default(uuid())
-  name                String
+  name                String    @unique
   products            Product[]
   purchasesByCategory PurchaseByCategory[]
   createdAt           DateTime  @default(now())
