@@ -25,7 +25,6 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   measurement: number;
-  
 
   @ApiProperty()
   @IsString()

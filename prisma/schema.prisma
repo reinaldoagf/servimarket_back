@@ -155,7 +155,7 @@ model Product {
   name                   String
   flavor                 String?
   smell                  String?
-  measurement            Int?
+  measurement            Float?
   unitMeasurement        UnitMeasurement?      @default(gramos)
   priceCalculation       PriceCalculation?     @default(unidad)
   packing                ProductPacking        @default(bolsa)
