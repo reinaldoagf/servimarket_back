@@ -114,6 +114,8 @@ model User {
   password              String    
   status                UserStatus      @default(activo)
   hasAllPermissions     Boolean         @default(false)
+  emailVerifiedAt       DateTime?
+  verificationToken     String?
 
   roleId                String?
   role                  Role?           @relation(fields: [roleId], references: [id])

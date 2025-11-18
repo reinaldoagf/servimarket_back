@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Confirma tu cuenta</title>
+    <style>
+      /* Estilos mínimos y compatibles con la mayoría de clientes */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f5f7fb;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        color: #333;
+      }
+      .container {
+        width: 100%;
+        max-width: 680px;
+        margin: 24px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+      }
+      .header {
+        padding: 20px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(90deg,#3b82f6,#06b6d4);
+        color: #fff;
+      }
+      .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: contain;
+        background: rgba(255,255,255,0.12);
+        padding: 6px;
+      }
+      .title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .content {
+        padding: 28px;
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0 0 18px;
+        color: #4b5563;
+        line-height: 1.5;
+      }
+      .cta {
+        display: inline-block;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        background-color: #0ea5a4;
+        color: #fff !important;
+        font-weight: 600;
+        box-shadow: 0 6px 18px rgba(14,165,164,0.15);
+      }
+      .muted {
+        margin-top: 18px;
+        color: #9ca3af;
+        font-size: 13px;
+      }
+      .footer {
+        padding: 18px 28px;
+        background: #f8fafc;
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .two-col {
+        display:flex;
+        gap:12px;
+        align-items:center;
+      }
+      @media (max-width:600px){
+        .header, .content, .footer { padding-left:16px; padding-right:16px; }
+        .container { margin: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" role="article" aria-roledescription="email">
+      <div class="header">
+        {{#if logoUrl}}
+          <img src="{{logoUrl}}" alt="{{companyName}} logo" class="logo" />
+        {{/if}}
+        <div>
+          <div class="title">{{companyName}}</div>
+          <div style="font-size:12px;opacity:0.95;">Confirma tu cuenta</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <h2>Hola {{name}},</h2>
+        <p>
+          Gracias por registrarte en <strong>{{companyName}}</strong>. Para completar la creación de tu cuenta
+          haz clic en el botón de abajo. Este enlace expirará en 24 horas.
+        </p>
+
+        <div style="margin: 18px 0; text-align:center;">
+          <a href="{{verifyUrl}}" class="cta" target="_blank" rel="noopener noreferrer">Confirmar correo</a>
+        </div>
+
+        <p style="word-break:break-all">
+          Si el botón no funciona, copia y pega esta URL en tu navegador:
+        </p>
+        <div style="font-size:13px; color:#0f172a; word-break:break-all; margin-top:8px;">
+          <a href="{{verifyUrl}}" target="_blank" rel="noopener noreferrer">{{verifyUrl}}</a>
+        </div>
+
+        <p class="muted">
+          Si no creaste una cuenta, ignora este correo. No se realizarán cambios.
+        </p>
+      </div>
+
+      <div class="footer">
+        <div class="two-col">
+          <div>
+            ¿Necesitas ayuda? Escríbenos a <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+          </div>
+          <div style="margin-left:auto;">
+            © {{year}} {{companyName}} — Todos los derechos reservados
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

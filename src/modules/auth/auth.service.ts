@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../../mail/mail.service';
 import { Prisma } from '@prisma/client';
 
 const SELECT_FIELDS = {
@@ -25,8 +26,9 @@ const SELECT_FIELDS = {
   businessId: true,
   avatar: true,
   settings: true,
+  verificationToken: true,
   business: { include: { branches: { include: { cashRegisters: true } }, settings: true } },
-  collaborations: { include: { branch: { include: { business: true, settings: true, cashRegisters: true } }, cashRegister: true } },
+  collaborations: {include:{branch:{include:{business: true, settings: true, cashRegisters: true}},cashRegister: true}},
 };
 
 @Injectable()
@@ -34,8 +36,32 @@ export class AuthService {
   constructor(
     private readonly service: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
+  async verifyEmail(token: string) {
+    const trimmedToken = token.trim();
+
+    const user = await this.service.user.findFirst({
+      where: { verificationToken: trimmedToken, status: 'inactivo' },
+      select: { id: true, verificationToken: true, email: true, name: true },
+    });
+
+    if (!user) throw new BadRequestException('Invalid or expired token');
+
+    return {
+      message: 'Cuenta verificada. Ya puedes iniciar sesión.',
+      data: await this.service.user.update({
+        where: { id: user.id },
+        select: { id: true, verificationToken: true, email: true, name: true },
+        data: {
+          status: 'activo',
+          emailVerifiedAt: new Date(),
+          verificationToken: null,
+        },
+      }),
+    };
+  }
   async register(dto: RegisterDto) {
     // verificar email duplicado
     const emailExist = await this.service.user.findUnique({ where: { email: dto.email } });
@@ -48,6 +74,8 @@ export class AuthService {
     if (dniExist) throw new BadRequestException('DNI already registered');
 
     const hashed = await bcrypt.hash(dto.password, 10);
+    // token de verificación
+    const verificationToken = crypto.randomUUID();
 
     const data: Prisma.UserCreateInput = {
       email: dto.email,
@@ -58,49 +86,54 @@ export class AuthService {
       city: dto.city,
       state: dto.state,
       password: hashed,
-      status: 'activo', // o venir en dto si lo deseas
+      status: 'inactivo',
+      verificationToken: `${verificationToken}`,
     };
 
-    const user = await this.service.user.create({ data, select: SELECT_FIELDS });
+    const user = await this.service.user.create({ data });
 
-    // 🔹 Vincular compras existentes por DNI (si las hay)
-    const purchases = await this.service.businessBranchPurchase.findMany({
-      where: { clientDNI: dto.dni },
-      select: { id: true },
-    });
+    // 🔄 Vincular compras por DNI...
+    await this.linkPurchases(dto.dni, user.id);
 
-    if (purchases.length > 0) {
-      // Ejecutar todas las actualizaciones en paralelo
-      await Promise.all(
-        purchases.map((p) =>
-          this.service.businessBranchPurchase.update({
-            where: { id: p.id },
-            data: { userId: user.id },
-          }),
-        ),
-      );
-    }
-    // 🔹 Vincular compras existentes por DNI (si las hay)
-    const purchasesByCategory = await this.service.purchaseByCategory.findMany({
-      where: { userRef: dto.dni },
-      select: { id: true },
-    });
-    if (purchasesByCategory.length > 0) {
-      // Ejecutar todas las actualizaciones en paralelo
-      await Promise.all(
-        purchasesByCategory.map((p) =>
-          this.service.purchaseByCategory.update({
-            where: { id: p.id },
-            data: { userId: user.id },
-          }),
-        ),
-      );
+    // 📧 Enviar email de verificación
+    const verifyUrl = `${process.env.FRONTEND_URL}/auth/verify-email/${verificationToken}`;
+
+    if(user?.email && user?.name) {
+      await this.mailService.sendVerificationEmail(user.email, {
+        name: user.name,
+        verifyUrl,
+      });
     }
 
-    const token = this.signToken(user.id, user.email);
-    return { access_token: token, user };
+    return {
+      message: 'Cuenta creada. Revisa tu email para activar tu cuenta.',
+    };
   }
 
+  // extra
+  private async linkPurchases(dni: string, userId: string) {
+    const purchases = await this.service.businessBranchPurchase.findMany({ where: { clientDNI: dni } });
+
+    await Promise.all(
+      purchases.map(p =>
+        this.service.businessBranchPurchase.update({
+          where: { id: p.id },
+          data: { userId },
+        }),
+      ),
+    );
+
+    const purchasesByCategory = await this.service.purchaseByCategory.findMany({ where: { userRef: dni } });
+
+    await Promise.all(
+      purchasesByCategory.map(p =>
+        this.service.purchaseByCategory.update({
+          where: { id: p.id },
+          data: { userId },
+        }),
+      ),
+    );
+  }
   async validateUserByEmail(email: string, plainPassword: string) {
     const user = await this.service.user.findUnique({ where: { email } });
     if (!user) return null;
@@ -144,6 +177,7 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
+    if (user.status === 'inactivo') throw new UnauthorizedException('Revisa tu email para activar tu cuenta.');
     const token = this.signToken(user.id, user.email);
     return { access_token: token, user: user };
   }
@@ -201,8 +235,9 @@ export class AuthService {
   async me(req: any) {
     if (req.user){
       const user = await this.service.user.findUnique({
-        where: { email: req.user.email }, select: SELECT_FIELDS,
-      })
+        where: { email: req.user.email },
+        select: SELECT_FIELDS,
+      });
       if (!user) throw new UnauthorizedException('Invalid credentials');
       const userSafe = (({ ...rest }) => rest)(user);
       const token = this.signToken(user.id, user.email);

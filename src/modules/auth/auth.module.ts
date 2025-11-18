@@ -5,9 +5,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../prisma/prisma.module'; // asumiendo que tienes PrismaModule global
+import { MailModule } from '../../mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     PrismaModule,
     ConfigModule,
     JwtModule.registerAsync({

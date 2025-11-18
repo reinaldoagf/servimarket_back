@@ -9,6 +9,7 @@ import {
   Get,
   Req,
   Patch,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -19,11 +20,17 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { MailService } from '../../mail/mail.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly service: AuthService) {}
+  constructor(private readonly service: AuthService, private readonly mailService: MailService) {}
+
+  @Get('verify-email/:token')
+  async verifyEmail(@Param('token') token: string) {
+    return this.service.verifyEmail(token);
+  }
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
@@ -56,11 +63,15 @@ export class AuthController {
           cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
-    })
+    }),
   ) // opcional, si envías archivo "dniFile"
   async updateProfile(@Req() req: any, @Body() dto: UpdateAuthDto, @UploadedFile() file?: Express.Multer.File) {
     const userId = req.user.sub; // viene del payload del JWT
     if (file) dto.avatar = file.filename; // ruta donde guardas el archivo
     return this.service.updateProfile(userId, dto);
+  }
+  @Get('test-email')
+  async test() {
+    return this.mailService.sendVerificationEmail('reinaldoagf1@gmail.com', { name: 'Reinaldo', verifyUrl: 'https://www.google.com/' });
   }
 }

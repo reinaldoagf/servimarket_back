@@ -50,6 +50,8 @@ CREATE TABLE `User` (
     `password` VARCHAR(191) NOT NULL,
     `status` ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo',
     `hasAllPermissions` BOOLEAN NOT NULL DEFAULT false,
+    `emailVerifiedAt` DATETIME(3) NULL,
+    `verificationToken` VARCHAR(191) NULL,
     `roleId` VARCHAR(191) NULL,
     `country` VARCHAR(191) NOT NULL DEFAULT 'venezuela',
     `state` VARCHAR(191) NOT NULL,
@@ -69,6 +71,7 @@ CREATE TABLE `ProductBrand` (
     `name` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `ProductBrand_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -78,6 +81,7 @@ CREATE TABLE `ProductCategory` (
     `name` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `ProductCategory_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -88,7 +92,7 @@ CREATE TABLE `Product` (
     `flavor` VARCHAR(191) NULL,
     `smell` VARCHAR(191) NULL,
     `measurement` DOUBLE NULL,
-    `unitMeasurement` ENUM('gramos', 'litros') NULL DEFAULT 'gramos',
+    `unitMeasurement` ENUM('kilogramos', 'gramos', 'miligramos', 'kilolitros', 'litros', 'mililitros') NULL DEFAULT 'gramos',
     `priceCalculation` ENUM('unidad', 'unidadDeMedida') NULL DEFAULT 'unidad',
     `packing` ENUM('botella', 'bolsa', 'caja', 'paquete', 'envase', 'otro') NOT NULL DEFAULT 'bolsa',
     `status` ENUM('activo', 'inactivo', 'revisar') NOT NULL DEFAULT 'activo',
