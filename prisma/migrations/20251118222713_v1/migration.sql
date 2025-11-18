@@ -186,6 +186,9 @@ CREATE TABLE `BusinessBranch` (
     `city` VARCHAR(191) NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `phone` VARCHAR(191) NOT NULL,
+    `schedule247` BOOLEAN NOT NULL DEFAULT false,
+    `itsOpen` BOOLEAN NOT NULL DEFAULT true,
+    `businessHours` JSON NULL,
     `currencyId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 

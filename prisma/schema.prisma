@@ -266,6 +266,9 @@ model BusinessBranch {
   city          String
   address       String
   phone         String
+  schedule247   Boolean                      @default(false)
+  itsOpen       Boolean                      @default(true)
+  businessHours Json?
   stocks        ProductStock[]
   collaborators BusinessBranchCollaborator[]
   clients       BusinessBranchClient[]

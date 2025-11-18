@@ -9,7 +9,7 @@ interface CreateBusinessInput {
   rif?: string;
   description?: string;
   ownerId: string;
-  branches: { country: string; state: string; city: string; address: string; phone: string; currencyId: string }[];
+  branches: { country: string; state: string; city: string; address: string; phone: string; currencyId: string, schedule247: boolean, itsOpen: boolean, businessHours: string }[];
   logo?: string | null;
 }
 
@@ -130,6 +130,8 @@ export class BusinessService {
     const expiredDate = new Date();
     expiredDate.setMonth(expiredDate.getMonth() + 1);
 
+    console.log({ input })
+
     try {
       const business = await this.service.business.create({
         data: {
@@ -147,6 +149,8 @@ export class BusinessService {
               city: b.city,
               address: b.address,
               phone: b.phone,
+              schedule247: b.schedule247,
+              businessHours: b.businessHours,
               currencyId: b.currencyId ?? null,
             })),
           },

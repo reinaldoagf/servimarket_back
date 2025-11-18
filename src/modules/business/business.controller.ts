@@ -80,10 +80,14 @@ export class BusinessController {
       address: string;
       phone: string;
       currencyId: string;
+      schedule247: boolean;
+      itsOpen: boolean;
+      businessHours: string;
     }[] = [];
     if (body.branches) {
       try {
         branches = JSON.parse(body.branches) || [];
+        console.log({ branches });
       } catch {
         throw new Error('Invalid branches JSON format');
       }
