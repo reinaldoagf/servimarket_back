@@ -44,6 +44,7 @@ const SELECT_FIELDS = {
   status: true,
   createdAt: true,
   ticketNumber: true,
+  approvedByClient: true,
   cashRegister: {
     select: {
       id: true,
@@ -563,5 +564,14 @@ export class BusinessBranchPurchaseService {
         status: dto.amountCancelled == purchase.totalAmount ? 'pagado' : purchase.status,
       },
     });
+  }
+
+  async approve(businessBranchPurchaseId: string, approve: boolean) {
+    const result = await this.service.businessBranchPurchase.update({
+      where: { id: businessBranchPurchaseId },
+      data: { approvedByClient: approve },
+    });
+    console.log({ result });
+    return result;
   }
 }

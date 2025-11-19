@@ -6,7 +6,6 @@ import {
   Post,
   Req,
   Body,
-  Delete,
   Param,
   Patch,
   UseGuards,
@@ -15,6 +14,7 @@ import { CreateBusinessBranchPurchaseDto } from './dto/create-business-branch-pu
 import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-business-branch-purchase-response.dto';
 import { BusinessBranchPurchaseService } from './business-branch-purchase.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
+import { ApprovePurchaseDto } from './dto/approve-purchase.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('business-branch-purchase')
@@ -84,11 +84,9 @@ export class BusinessBranchPurchaseController {
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
     return this.service.update(id, dto);
   }
-  /*
-  @Delete(':id')
+  @Patch(':id/approve')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.service.deleteById(id);
+  async approve(@Param('id') id: string, @Body() dto: ApprovePurchaseDto) {
+    return this.service.approve(id, dto.approve);
   }
-  */
 }

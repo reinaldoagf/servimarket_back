@@ -359,11 +359,11 @@ model Purchase {
 }
 
 model BusinessBranchPurchase { // Factura
-  id               String          @id @default(uuid())
-  ticketNumber     Int?
-  clientName       String?
-  clientDNI        String?
-  businessRef      String?
+  id                          String          @id @default(uuid())
+  ticketNumber                Int?
+  clientName                  String?
+  clientDNI                   String?
+  businessRef                 String?
   registeredRef               String?
   cashRegisterRef             String?
   branchRef                   String?
@@ -375,6 +375,7 @@ model BusinessBranchPurchase { // Factura
   totalAmount                 Float
   expiredDate                 DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
   closingDate                 DateTime?
+  approvedByClient            Boolean         @default(false)
   status                      PurchaseStatus  @default(pendiente)
   purchases                   Purchase[]
   purchasesBillPaymentMethod  PurchaseBillPaymentMethod[]

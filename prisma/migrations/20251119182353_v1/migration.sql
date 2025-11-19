@@ -288,6 +288,7 @@ CREATE TABLE `BusinessBranchPurchase` (
     `totalAmount` DOUBLE NOT NULL,
     `expiredDate` DATETIME(3) NULL,
     `closingDate` DATETIME(3) NULL,
+    `approvedByClient` BOOLEAN NOT NULL DEFAULT false,
     `status` ENUM('pendiente', 'pagado', 'caducado') NOT NULL DEFAULT 'pendiente',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
