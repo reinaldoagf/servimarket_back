@@ -364,22 +364,32 @@ model BusinessBranchPurchase { // Factura
   clientName       String?
   clientDNI        String?
   businessRef      String?
-  registeredRef    String?
-  cashRegisterRef  String?
-  branchRef        String?
-  cashRegisterId   String?
-  cashRegister     CashRegister?   @relation(fields: [cashRegisterId], references: [id])
-  userId           String?
-  user             User?           @relation(fields: [userId], references: [id])
-  amountCancelled  Float
-  totalAmount      Float
-  expiredDate      DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
-  closingDate      DateTime?
-  status           PurchaseStatus  @default(pendiente)
-  purchases        Purchase[]
-  createdAt        DateTime        @default(now())
+  registeredRef               String?
+  cashRegisterRef             String?
+  branchRef                   String?
+  cashRegisterId              String?
+  cashRegister                CashRegister?   @relation(fields: [cashRegisterId], references: [id])
+  userId                      String?
+  user                        User?           @relation(fields: [userId], references: [id])
+  amountCancelled             Float
+  totalAmount                 Float
+  expiredDate                 DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
+  closingDate                 DateTime?
+  status                      PurchaseStatus  @default(pendiente)
+  purchases                   Purchase[]
+  purchasesBillPaymentMethod  PurchaseBillPaymentMethod[]
+  createdAt                   DateTime        @default(now())
 }
 
+model PurchaseBillPaymentMethod {
+  id                        String          @id @default(uuid())
+  amountCancelled           Float           @default(0.0)
+  businessBranchPurchaseId  String?
+  businessBranchPurchase    BusinessBranchPurchase? @relation(fields: [businessBranchPurchaseId], references: [id])
+  billPaymentMethodId       String?
+  billPaymentMethod         BillPaymentMethod? @relation(fields: [billPaymentMethodId], references: [id])
+  createdAt                 DateTime        @default(now())
+}
 
 model Setting {
   id               String          @id @default(uuid())
@@ -399,13 +409,27 @@ model Setting {
 }
 
 model Currency {
-  id          String            @id @default(uuid())
-  coin        String            @unique
-  code        String            @unique
-  symbol      String            @unique
-  name        String
-  country     String          
-  exchange    Float             @default(1.0)
-  branches    BusinessBranch[]
-  createdAt   DateTime          @default(now())
+  id                  String              @id @default(uuid())
+  coin                String              @unique
+  code                String              @unique
+  symbol              String              @unique
+  name                String
+  country             String
+  exchange            Float               @default(1.0)
+  branches            BusinessBranch[]
+  billPaymentMethods  BillPaymentMethod[]
+  createdAt           DateTime            @default(now())
+}
+
+model BillPaymentMethod {
+  id                          String            @id @default(uuid())
+  name                        String            @unique
+  image                       String?
+  country                     String?
+  currencyId                  String?
+  currency                    Currency? @relation(fields: [currencyId], references: [id])
+  purchasesBillPaymentMethod  PurchaseBillPaymentMethod[]
+  createdAt                   DateTime          @default(now())
+
+  @@unique([name, country])
 }

@@ -18,6 +18,7 @@ import { BusinessBranchPurchaseModule } from './modules/business-branch-purchase
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
+import { BillPaymentMethodsModule } from './modules/bill-payment-methods/bill-payment-methods.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
     MetricsModule,
     SettingsModule,
     CurrenciesModule,
+    BillPaymentMethodsModule,
   ],
   providers: [],
 })

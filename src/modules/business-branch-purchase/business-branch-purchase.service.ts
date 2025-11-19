@@ -43,6 +43,7 @@ const SELECT_FIELDS = {
   totalAmount: true,
   status: true,
   createdAt: true,
+  ticketNumber: true,
   cashRegister: {
     select: {
       id: true,
@@ -463,8 +464,14 @@ export class BusinessBranchPurchaseService {
 
     // 🔹 Filtro por búsqueda general
     if (search) {
+      const searchNumber = Number(search);
       where.OR = [
-        { ticketNumber: { contains: search } },
+        // Si search es un número válido, filtra por ticketNumber
+        ...(Number.isInteger(searchNumber)
+          ? [{ ticketNumber: searchNumber }]
+          : []),
+
+        // Otros campos tipo string:
         { user: { name: { contains: search } } },
         { user: { email: { contains: search } } },
         { user: { username: { contains: search } } },

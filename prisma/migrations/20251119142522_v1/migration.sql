@@ -295,6 +295,17 @@ CREATE TABLE `BusinessBranchPurchase` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `PurchaseBillPaymentMethod` (
+    `id` VARCHAR(191) NOT NULL,
+    `amountCancelled` DOUBLE NOT NULL DEFAULT 0.0,
+    `businessBranchPurchaseId` VARCHAR(191) NULL,
+    `billPaymentMethodId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Setting` (
     `id` VARCHAR(191) NOT NULL,
     `key` VARCHAR(191) NOT NULL,
@@ -324,6 +335,20 @@ CREATE TABLE `Currency` (
     UNIQUE INDEX `Currency_coin_key`(`coin`),
     UNIQUE INDEX `Currency_code_key`(`code`),
     UNIQUE INDEX `Currency_symbol_key`(`symbol`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `BillPaymentMethod` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `image` VARCHAR(191) NULL,
+    `country` VARCHAR(191) NULL,
+    `currencyId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `BillPaymentMethod_name_key`(`name`),
+    UNIQUE INDEX `BillPaymentMethod_name_country_key`(`name`, `country`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -436,6 +461,12 @@ ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_cash
 ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `PurchaseBillPaymentMethod` ADD CONSTRAINT `PurchaseBillPaymentMethod_businessBranchPurchaseId_fkey` FOREIGN KEY (`businessBranchPurchaseId`) REFERENCES `BusinessBranchPurchase`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PurchaseBillPaymentMethod` ADD CONSTRAINT `PurchaseBillPaymentMethod_billPaymentMethodId_fkey` FOREIGN KEY (`billPaymentMethodId`) REFERENCES `BillPaymentMethod`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Setting` ADD CONSTRAINT `Setting_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -443,3 +474,6 @@ ALTER TABLE `Setting` ADD CONSTRAINT `Setting_businessId_fkey` FOREIGN KEY (`bus
 
 -- AddForeignKey
 ALTER TABLE `Setting` ADD CONSTRAINT `Setting_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `BillPaymentMethod` ADD CONSTRAINT `BillPaymentMethod_currencyId_fkey` FOREIGN KEY (`currencyId`) REFERENCES `Currency`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

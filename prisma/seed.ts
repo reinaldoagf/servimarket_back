@@ -41,26 +41,73 @@ async function main(): Promise<void> {
   await prisma.currency.createMany({
     data: [
       {
-        coin: 'dollar', 
-        code: 'USD', 
-        symbol: '$', 
-        name: 'Dólar', 
+        coin: 'dollar',
+        code: 'USD',
+        symbol: '$',
+        name: 'Dólar',
         exchange: 1,
-        country: 'estados unidos'
+        country: 'estados unidos',
       },
-      { 
-        coin: 'bolivares', 
-        code: 'VEF', 
-        symbol: 'Bs', 
-        name: 'Bolívar', 
+      {
+        coin: 'bolivares',
+        code: 'VEF',
+        symbol: 'Bs',
+        name: 'Bolívar',
         exchange: 1,
-        country: 'venezuela'
+        country: 'venezuela',
       },
     ],
     skipDuplicates: true,
   });
 
   console.log('✅ Monedas creadas');
+
+  // Validar nombre único
+  const usdCurrency = await prisma.currency.findUnique({
+    where: { coin: 'dollar' ,code: 'USD', symbol: '$', },
+  });
+
+  await prisma.billPaymentMethod.create({
+    data: {
+      name: 'divisa',
+      image: null,
+      country: null,
+      currencyId: usdCurrency?.id ?? null,
+    },
+  });
+
+  const bsCurrency = await prisma.currency.findUnique({
+    where: { coin: 'bolivares' ,code: 'VEF', symbol: 'Bs', },
+  });
+
+  await prisma.billPaymentMethod.create({
+    data: {
+      name: 'efectivo',
+      image: null,
+      country: 'venezuela',
+      currencyId: bsCurrency?.id ?? null,
+    },
+  });
+
+  await prisma.billPaymentMethod.create({
+    data: {
+      name: 'pago móvil',
+      image: null,
+      country: 'venezuela',
+      currencyId: bsCurrency?.id ?? null,
+    },
+  });
+
+  await prisma.billPaymentMethod.create({
+    data: {
+      name: 'transferencia bancaria',
+      image: null,
+      country: 'venezuela',
+      currencyId: bsCurrency?.id ?? null,
+    },
+  });
+
+  console.log('✅ Metodos de pago de facturas creadas');
 
   await prisma.user.createMany({
     data: [
