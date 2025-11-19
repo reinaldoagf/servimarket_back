@@ -275,6 +275,7 @@ CREATE TABLE `Purchase` (
 -- CreateTable
 CREATE TABLE `BusinessBranchPurchase` (
     `id` VARCHAR(191) NOT NULL,
+    `ticketNumber` INTEGER NULL,
     `clientName` VARCHAR(191) NULL,
     `clientDNI` VARCHAR(191) NULL,
     `businessRef` VARCHAR(191) NULL,

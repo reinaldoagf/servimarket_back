@@ -358,8 +358,9 @@ model Purchase {
   createdAt                  DateTime                @default(now())
 }
 
-model BusinessBranchPurchase {
+model BusinessBranchPurchase { // Factura
   id               String          @id @default(uuid())
+  ticketNumber     Int?
   clientName       String?
   clientDNI        String?
   businessRef      String?

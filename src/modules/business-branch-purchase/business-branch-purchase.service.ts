@@ -228,10 +228,19 @@ export class BusinessBranchPurchaseService {
           }
         }
       }
+      // 🧮 Obtener el ticketNumber más alto para el branch actual
+      const lastTicket = await tx.businessBranchPurchase.findFirst({
+        where: { cashRegister: { branchId } },
+        orderBy: { ticketNumber: 'desc' },
+        select: { ticketNumber: true },
+      });
 
+      // 🎫 Generar nuevo ticketNumber autoincremental
+      const newTicketNumber = (lastTicket?.ticketNumber ?? 0) + 1;
       // 🔹 Crear la compra principal y sus detalles
       const purchase = await tx.businessBranchPurchase.create({
         data: {
+          ticketNumber: newTicketNumber,
           clientName: dto.clientName ?? null,
           clientDNI: dto.clientDNI ?? null,
           userId: dto.userId ?? null,
@@ -455,6 +464,7 @@ export class BusinessBranchPurchaseService {
     // 🔹 Filtro por búsqueda general
     if (search) {
       where.OR = [
+        { ticketNumber: { contains: search } },
         { user: { name: { contains: search } } },
         { user: { email: { contains: search } } },
         { user: { username: { contains: search } } },
