@@ -5,6 +5,7 @@ import {
   Get,
   Query,
   Post,
+  Put,
   Body,
   UseInterceptors,
   UploadedFile,
@@ -17,6 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { CreateBusinessDto } from './dto/create-business.dto';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 import { PaginatedBusinessResponseDto } from './dto/paginated-business-response.dto';
 import { BusinessService } from './business.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -72,7 +74,6 @@ export class BusinessController {
     }),
   ) // opcional, si envías archivo "logo"
   async create(@Body() body: CreateBusinessDto, @UploadedFile() file?: Express.Multer.File) {
-
     let branches: {
       country: string;
       state: string;
@@ -87,7 +88,6 @@ export class BusinessController {
     if (body.branches) {
       try {
         branches = JSON.parse(body.branches) || [];
-        console.log({ branches });
       } catch {
         throw new Error('Invalid branches JSON format');
       }
@@ -101,6 +101,53 @@ export class BusinessController {
       branches,
       logo: file ? file.filename : null,
     });
+  }
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('logo', {
+      storage: diskStorage({
+        destination: './uploads/logos', // 📂 carpeta donde se guardan
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  ) // opcional, si envías archivo "logo"
+  async update(@Param('id') id: string, @Body() body: UpdateBusinessDto, @UploadedFile() file?: Express.Multer.File) {
+    let branches: {
+      country: string;
+      state: string;
+      city: string;
+      address: string;
+      phone: string;
+      currencyId: string;
+      schedule247: boolean;
+      itsOpen: boolean;
+      businessHours: string;
+    }[] = [];
+    if (body.branches) {
+      try {
+        branches = JSON.parse(body.branches) || [];
+      } catch {
+        throw new Error('Invalid branches JSON format');
+      }
+    }
+    // Construimos el objeto data dinámicamente
+    const updateData: any = {
+      name: body.name,
+      rif: body.rif,
+      description: body.description ?? '',
+      branches,
+    };
+
+    // Solo actualizar 'logo' si viene file
+    if (file?.filename) {
+      updateData.logo = file.filename;
+    }
+
+    return this.service.update(id, updateData);
   }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

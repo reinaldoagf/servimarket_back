@@ -13,6 +13,27 @@ interface CreateBusinessInput {
   logo?: string | null;
 }
 
+class BranchUpdateInput {
+  id?: string; // si existe, se actualiza, si no, se crea
+  country?: string;
+  state?: string;
+  city?: string;
+  address?: string;
+  phone?: string;
+  schedule247?: boolean;
+  businessHours?: string;
+  currencyId?: string | null;
+}
+
+interface UpdateBusinessInput {
+  name?: string;
+  rif?: string;
+  description?: string | null;
+  logo?: string | null;
+
+  branches?: BranchUpdateInput[];
+}
+
 const SELECT_FIELDS = {
   id: true,
   rif: true,
@@ -130,8 +151,6 @@ export class BusinessService {
     const expiredDate = new Date();
     expiredDate.setMonth(expiredDate.getMonth() + 1);
 
-    console.log({ input })
-
     try {
       const business = await this.service.business.create({
         data: {
@@ -194,7 +213,98 @@ export class BusinessService {
       throw new BadRequestException(`Error creating business: ${err.message}`);
     }
   }
+  async update(id: string, input: UpdateBusinessInput) {
+    // Obtener negocio actual (incluye sucursales existentes)
+    const existing = await this.service.business.findUnique({
+      where: { id },
+      include: { branches: true },
+    });
 
+    if (!existing) {
+      throw new NotFoundException('Business not found');
+    }
+
+    // -------------------------------
+    // 1. Determinar branches existentes
+    // -------------------------------
+    const existingBranchIds = existing.branches.map(b => b.id);
+
+    if(input.branches) {
+    // IDs enviados por el cliente
+    const incomingBranchIds = input.branches.filter(b => !!b.id).map(b => b.id);
+
+    // Branches a eliminar (existen en DB pero no vienen en input)
+    const branchesToDelete = existingBranchIds.filter(
+      id => !incomingBranchIds.includes(id)
+    );
+
+    // -------------------------------
+    // 2. Preparar operaciones de update/create
+    // -------------------------------
+      
+    const branchesUpdateOps = input.branches
+      .filter(b => !!b.id)
+      .map(b => ({
+        where: { id: b.id },
+        data: {
+          country: b.country ?? '',
+          state: b.state ?? '',
+          city: b.city ?? '',
+          address: b.address ?? '',
+          phone: b.phone ?? '',
+          schedule247: b.schedule247,
+          businessHours: b.businessHours,
+          currencyId: b.currencyId ?? null,
+        },
+      }));
+
+    const branchesCreateOps = input.branches
+      .filter(b => !b.id)
+      .map(b => ({
+        country: b.country ?? '',
+        state: b.state ?? '',
+        city: b.city ?? '',
+        address: b.address ?? '',
+        phone: b.phone ?? '',
+        schedule247: b.schedule247,
+        businessHours: b.businessHours,
+        currencyId: b.currencyId ?? null,
+      }));
+
+    // -------------------------------
+    // 3. Realizar la actualización
+    // -------------------------------
+    const updated = await this.service.business.update({
+      where: { id },
+      data: {
+        // Campos editables
+        name: input.name,
+        rif: input.rif,
+        description: input.description ?? existing.description,
+        logo: input.logo,
+
+        // ❗ Campos que NO deben modificarse
+        // ownerId: KEEP
+        // subscriptionDate: KEEP
+        // expirationDate: KEEP
+
+        branches: {
+          deleteMany: {
+            id: { in: branchesToDelete },
+          },
+          update: branchesUpdateOps,
+          create: branchesCreateOps,
+        },
+      },
+      include: {
+        branches: true,
+        owner: true,
+      },
+    });
+
+    return updated;
+    }
+  }
   async delete(id: string) {
     // Verificar si existe antes de eliminar
     const business = await this.service.business.findUnique({ where: { id } });
