@@ -6,6 +6,7 @@ import {
   Query,
   Post,
   Put,
+  Patch,
   Body,
   UseInterceptors,
   UploadedFile,
@@ -20,6 +21,7 @@ import { extname } from 'path';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { PaginatedBusinessResponseDto } from './dto/paginated-business-response.dto';
+import { UpdateBranchAvailabilityDto } from './dto/update-branch-availability.dto';
 import { BusinessService } from './business.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -153,5 +155,13 @@ export class BusinessController {
   @UseGuards(JwtAuthGuard)
   async delete(@Param('id') id: string) {
     return this.service.delete(id);
+  }
+  @Patch('branch/:id/availability')
+  @UseGuards(JwtAuthGuard)
+  async updateBranchStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateBranchAvailabilityDto
+  ) {
+    return this.service.updateBranchAvailability(id, body.itsOpen);
   }
 }

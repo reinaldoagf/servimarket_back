@@ -348,4 +348,10 @@ export class BusinessService {
       where: { id },
     });
   }
+  async updateBranchAvailability(branchId: string, itsOpen: boolean) {
+    return this.service.businessBranch.update({
+      where: { id: branchId },
+      data: { itsOpen },
+    });
+  }
 }
