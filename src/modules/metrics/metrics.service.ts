@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class MetricsService {
   constructor(private service: PrismaService) {}
 
-  async getPurchasesByCategory(
+  async getSalesByCategory(
     businessId?: string | null,
     branchId?: string | null,
     userId?: string | null,
@@ -31,20 +31,13 @@ export class MetricsService {
     if (userId) where.userId = userId;
     /* if (userId) where.approvedByClient = true; */
 
-    // 🔹 Consulta agrupada: mes + categoría
-   /*  const purchasesByCategory = await this.service.purchaseByCategory.groupBy({
-      by: ['categoryId'],
-      where,
-      _sum: { total: true },
-    }); */
-
     // 🔹 Cargar las categorías relacionadas
     const categories = await this.service.productCategory.findMany({
       select: { id: true, name: true },
     });
 
     // 🔹 Obtener las compras del año actual (ordenadas por fecha)
-    const records = await this.service.purchaseByCategory.findMany({
+    const records = await this.service.saleByCategory.findMany({
       where,
       select: {
         total: true,

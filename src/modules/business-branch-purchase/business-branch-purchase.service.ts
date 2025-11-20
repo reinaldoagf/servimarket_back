@@ -197,7 +197,7 @@ export class BusinessBranchPurchaseService {
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
           const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-          const existingCategoryRecord = await tx.purchaseByCategory.findFirst({
+          const existingCategoryRecord = await tx.saleByCategory.findFirst({
             where: {
               categoryId,
               businessId,
@@ -210,13 +210,13 @@ export class BusinessBranchPurchaseService {
 
           if (existingCategoryRecord) {
             // 🔹 Si existe, incrementar el total
-            await tx.purchaseByCategory.update({
+            await tx.saleByCategory.update({
               where: { id: existingCategoryRecord.id },
               data: { total: { increment: totalToAdd } },
             });
           } else {
             // 🔹 Si no existe, crear nuevo registro
-            await tx.purchaseByCategory.create({
+            await tx.saleByCategory.create({
               data: {
                 categoryId,
                 businessId,

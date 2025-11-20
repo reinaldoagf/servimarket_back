@@ -123,11 +123,11 @@ export class AuthService {
       ),
     );
 
-    const purchasesByCategory = await this.service.purchaseByCategory.findMany({ where: { userRef: dni } });
+    const salesByCategory = await this.service.saleByCategory.findMany({ where: { userRef: dni } });
 
     await Promise.all(
-      purchasesByCategory.map(p =>
-        this.service.purchaseByCategory.update({
+      salesByCategory.map(p =>
+        this.service.saleByCategory.update({
           where: { id: p.id },
           data: { userId },
         }),

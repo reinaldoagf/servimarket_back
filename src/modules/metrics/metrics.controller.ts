@@ -6,16 +6,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class MetricsController {
   constructor(private service: MetricsService) {}
 
-  @Get('purchases-by-category')
+  @Get('sales-by-category')
   @UseGuards(JwtAuthGuard)
-  async getPurchasesByCategory(
+  async getSalesByCategory(
     @Query('businessId') businessId: string = '',
     @Query('branchId') branchId: string = '',
     @Query('userId') userId: string = '',
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {
-    return this.service.getPurchasesByCategory(
+    return this.service.getSalesByCategory(
       businessId,
       branchId,
       userId,

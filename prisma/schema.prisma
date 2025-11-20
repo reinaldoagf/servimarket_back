@@ -137,6 +137,7 @@ model User {
   suppliers             BusinessBranchSupplier[]
   purchases             BusinessBranchPurchase[]
   settings              Setting[]
+  salesByCategory       SaleByCategory[]
   purchasesByCategory   PurchaseByCategory[]
   createdAt             DateTime        @default(now())
 }
@@ -152,6 +153,7 @@ model ProductCategory {
   id                  String    @id @default(uuid())
   name                String    @unique
   products            Product[]
+  salesByCategory     SaleByCategory[]
   purchasesByCategory PurchaseByCategory[]
   createdAt           DateTime  @default(now())
 }
@@ -251,35 +253,35 @@ model Business {
   products                  Product[]
   settings                  Setting[]
   cashRegisters             CashRegister[]
-  purchases                 PurchaseByCategory[]
+  salesByCategory           SaleByCategory[]
   // relación 1:N con usuarios (empleados/miembros)
   /* users User[] @relation("BusinessUsers") */
   createdAt                 DateTime         @default(now())
 }
 
 model BusinessBranch {
-  id            String                       @id @default(uuid())
-  businessId    String?
-  business      Business?                    @relation(fields: [businessId], references: [id])
-  country       String                       @default("venezuela")
-  state         String
-  city          String
-  address       String
-  phone         String
-  schedule247   Boolean                      @default(false)
-  itsOpen       Boolean                      @default(true)
-  businessHours Json?
-  stocks        ProductStock[]
-  collaborators BusinessBranchCollaborator[]
-  clients       BusinessBranchClient[]
-  suppliers     BusinessBranchSupplier[]
-  pendings      Pending[]
-  settings      Setting[]
-  cashRegisters CashRegister[]
-  purchases     PurchaseByCategory[]
-  currencyId    String?
-  currency      Currency?                    @relation(fields: [currencyId], references: [id])
-  createdAt     DateTime                     @default(now())
+  id                  String                       @id @default(uuid())
+  businessId          String?
+  business            Business?                    @relation(fields: [businessId], references: [id])
+  country             String                       @default("venezuela")
+  state               String
+  city                String
+  address             String
+  phone               String
+  schedule247         Boolean                      @default(false)
+  itsOpen             Boolean                      @default(true)
+  businessHours       Json?
+  stocks              ProductStock[]
+  collaborators       BusinessBranchCollaborator[]
+  clients             BusinessBranchClient[]
+  suppliers           BusinessBranchSupplier[]
+  pendings            Pending[]
+  settings            Setting[]
+  cashRegisters       CashRegister[]
+  salesByCategory     SaleByCategory[]
+  currencyId          String?
+  currency        Currency?                    @relation(fields: [currencyId], references: [id])
+  createdAt       DateTime                     @default(now())
 }
 
 model CashRegister {
@@ -327,6 +329,18 @@ model BusinessBranchSupplier {
 }
 
 model PurchaseByCategory {
+  id            String           @id @default(uuid())
+  total         Float            @default(0.0)
+  userRef       String?
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id])
+  categoryRef   String?
+  categoryId    String?
+  category      ProductCategory? @relation(fields: [categoryId], references: [id])
+  createdAt     DateTime         @default(now())
+}
+
+model SaleByCategory {
   id            String           @id @default(uuid())
   total         Float            @default(0.0)
   userRef       String?
