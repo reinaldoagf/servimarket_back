@@ -86,7 +86,8 @@ export class BusinessBranchPurchaseController {
   }
   @Patch(':id/approve')
   @UseGuards(JwtAuthGuard)
-  async approve(@Param('id') id: string, @Body() dto: ApprovePurchaseDto) {
-    return this.service.approve(id, dto.approve);
+  async approve(@Req() req: any, @Param('id') id: string, @Body() dto: ApprovePurchaseDto) {
+    const requestingUserID = req.user.sub; // viene del payload del JWT
+    return this.service.approve(requestingUserID, id, dto.approve);
   }
 }

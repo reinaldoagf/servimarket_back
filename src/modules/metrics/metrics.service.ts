@@ -5,6 +5,75 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class MetricsService {
   constructor(private service: PrismaService) {}
 
+  async getPurchasesByCategory(
+    requestingUserID?: string | null,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const currentYear = new Date().getFullYear();
+
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ];
+
+    const start = startDate ? new Date(startDate) : new Date(`${currentYear}-01-01`);
+    const end = endDate ? new Date(endDate) : new Date(`${currentYear}-12-31`);
+
+    // 🔹 Filtro base para la tabla agregada
+    const where: any = {
+      createdAt: { gte: start, lte: end },
+    };
+    if (requestingUserID) where.userId = requestingUserID;
+
+    // 🔹 Cargar las categorías relacionadas
+    const categories = await this.service.productCategory.findMany({
+      select: { id: true, name: true },
+    });
+
+    // 🔹 Obtener las compras del año actual (ordenadas por fecha)
+    const records = await this.service.purchaseByCategory.findMany({
+      where,
+      select: {
+        total: true,
+        createdAt: true,
+        category: { select: { id: true, name: true } },
+      },
+    });
+
+    // 🔹 Inicializar estructura base
+    const grouped: Record<string, Record<string, number>> = {};
+    for (const month of months) {
+      grouped[month] = {};
+      for (const cat of categories) {
+        grouped[month][cat.name] = 0;
+      }
+    }
+
+    // 🔹 Rellenar la estructura con los totales agrupados por mes
+    for (const record of records) {
+      const monthName = record.createdAt.toLocaleString('es-ES', { month: 'long' });
+      const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
+
+      const categoryName = record.category?.name ?? 'Sin categoría';
+      const total = record.total ?? 0;
+
+      if (!grouped[monthCapitalized]) grouped[monthCapitalized] = {};
+      if (!grouped[monthCapitalized][categoryName]) grouped[monthCapitalized][categoryName] = 0;
+
+      grouped[monthCapitalized][categoryName] += total;
+    }
+
+    // 🔹 Formatear resultado para el frontend
+    return months.map((month) => ({
+      month,
+      categories: Object.entries(grouped[month] ?? {}).map(([category, total]) => ({
+        category,
+        total,
+      })),
+    }));
+  }
+
   async getSalesByCategory(
     businessId?: string | null,
     branchId?: string | null,
@@ -29,7 +98,6 @@ export class MetricsService {
     if (businessId) where.businessId = businessId;
     if (branchId) where.branchId = branchId;
     if (userId) where.userId = userId;
-    /* if (userId) where.approvedByClient = true; */
 
     // 🔹 Cargar las categorías relacionadas
     const categories = await this.service.productCategory.findMany({

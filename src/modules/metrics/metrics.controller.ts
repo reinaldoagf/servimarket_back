@@ -1,10 +1,24 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('metrics')
 export class MetricsController {
   constructor(private service: MetricsService) {}
+  @Get('purchases-by-category')
+  @UseGuards(JwtAuthGuard)
+  async getPurchasesByCategory(
+    @Req() req: any,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    const requestingUserID = req.user.sub; // viene del payload del JWT
+    return this.service.getPurchasesByCategory(
+      requestingUserID,
+      startDate,
+      endDate,
+    );
+  }
 
   @Get('sales-by-category')
   @UseGuards(JwtAuthGuard)

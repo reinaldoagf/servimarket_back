@@ -91,7 +91,7 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<UserResponseDto | null> {
-    return this.service.user.findUnique({
+    return await this.service.user.findUnique({
       where: { id: id },
       select: SELECT_FIELDS,
     });

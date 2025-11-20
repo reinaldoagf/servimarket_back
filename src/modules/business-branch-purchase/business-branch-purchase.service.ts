@@ -72,7 +72,7 @@ const SELECT_FIELDS = {
       unitsOrMeasures: true,
       price: true,
       createdAt: true,
-      product: { select: { id: true, name: true } },
+      product: { select: { id: true, name: true, category: { select: { id: true, name: true } } } },
     },
   },
 };
@@ -468,9 +468,7 @@ export class BusinessBranchPurchaseService {
       const searchNumber = Number(search);
       where.OR = [
         // Si search es un número válido, filtra por ticketNumber
-        ...(Number.isInteger(searchNumber)
-          ? [{ ticketNumber: searchNumber }]
-          : []),
+        ...(Number.isInteger(searchNumber) ? [{ ticketNumber: searchNumber }] : []),
 
         // Otros campos tipo string:
         { user: { name: { contains: search } } },
@@ -566,12 +564,58 @@ export class BusinessBranchPurchaseService {
     });
   }
 
-  async approve(businessBranchPurchaseId: string, approve: boolean) {
+  async approve(requestingUserID: string, businessBranchPurchaseId: string, approve: boolean) {
     const result = await this.service.businessBranchPurchase.update({
       where: { id: businessBranchPurchaseId },
       data: { approvedByClient: approve },
+      select: SELECT_FIELDS,
     });
-    console.log({ result });
+    if (requestingUserID) {
+      const user = await this.service.user.findUnique({
+        where: { id: requestingUserID },
+        select: { id: true, dni: true },
+      });
+      if (user) {
+        // 🔹 Recorremos las compras
+        for (const purchase of result.purchases) {
+          const categoryId = purchase.product?.category?.id ?? null;
+          const totalToAdd = purchase.unitsOrMeasures * purchase.price;
+          if (categoryId) {
+            // 🔹 Buscar registro existente del mes actual
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+            const existingCategoryRecord = await this.service.purchaseByCategory.findFirst({
+              where: {
+                categoryId,
+                userId: user.id ?? null,
+                createdAt: { gte: startOfMonth, lte: endOfMonth },
+              },
+              select: { id: true, total: true },
+            });
+
+            if (existingCategoryRecord) {
+              // 🔹 Si existe, incrementar el total
+              await this.service.purchaseByCategory.update({
+                where: { id: existingCategoryRecord.id },
+                data: { total: { increment: totalToAdd } },
+              });
+            } else {
+              // 🔹 Si no existe, crear nuevo registro
+              await this.service.purchaseByCategory.create({
+                data: {
+                  categoryId,
+                  userRef: user.dni ?? null,
+                  userId: user.id ?? null,
+                  total: totalToAdd,
+                  categoryRef: purchase.product?.category?.name ?? categoryId,
+                },
+              });
+            }
+          }
+        }
+      }
+    }
     return result;
   }
 }
