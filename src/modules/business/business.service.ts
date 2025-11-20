@@ -1,13 +1,13 @@
 // src/business/business.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { BusinessBranch, Prisma } from '@prisma/client';
+import { BusinessBranch, Prisma, BusinessType } from '@prisma/client';
 import { PaginatedBusinessResponseDto } from './dto/paginated-business-response.dto';
 
 interface CreateBusinessInput {
   name: string;
   rif?: string;
-  description?: string;
+  type?: BusinessType;
   ownerId: string;
   branches: { country: string; state: string; city: string; address: string; phone: string; currencyId: string, schedule247: boolean, itsOpen: boolean, businessHours: string }[];
   logo?: string | null;
@@ -28,7 +28,7 @@ class BranchUpdateInput {
 interface UpdateBusinessInput {
   name?: string;
   rif?: string;
-  description?: string | null;
+  type?: BusinessType;
   logo?: string | null;
 
   branches?: BranchUpdateInput[];
@@ -39,7 +39,7 @@ const SELECT_FIELDS = {
   rif: true,
   name: true,
   logo: true,
-  description: true,
+  type: true,
   branches: true,
   subscriptionPlan: true,
   subscriptionDate: true,
@@ -79,7 +79,26 @@ export class BusinessService {
     const where: Prisma.BusinessWhereInput = {};
 
     if (search) {
-      where.OR = [{ name: { contains: search } }];
+      const enumValues = [
+        'minimercado',
+        'supermercado',
+        'hypermercado',
+        'farmacia',
+        'panaderia',
+        'otro',
+      ];
+
+      const matchedEnum = enumValues.find(v =>
+        v.toLowerCase().includes(search.toLowerCase()),
+      );
+
+      where.OR = [
+        { name: { contains: search } },
+      ];
+
+      if (matchedEnum) {
+        where.OR.push({ type: { equals: matchedEnum as BusinessType } });
+      }
     }
 
     if (startDate && endDate) {
@@ -156,7 +175,7 @@ export class BusinessService {
         data: {
           name: input.name,
           rif: input.rif,
-          description: input.description || '',
+          type: input.type,
           logo: input.logo,
           ownerId: input.ownerId,
           subscriptionDate: new Date(),
@@ -280,7 +299,7 @@ export class BusinessService {
         // Campos editables
         name: input.name,
         rif: input.rif,
-        description: input.description ?? existing.description,
+        type: input.type ?? existing.type,
         logo: input.logo,
 
         // ❗ Campos que NO deben modificarse

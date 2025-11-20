@@ -16,6 +16,16 @@ datasource db {
 //
 // ENUMS
 //
+
+enum BusinessType {
+  minimercado
+  supermercado
+  hypermercado
+  farmacia
+  panaderia
+  otro
+}
+
 enum PurchaseStatus {
   pendiente
   pagado
@@ -37,6 +47,7 @@ enum ProductPacking {
 }
 
 enum UnitMeasurement {
+  noaplica
   kilogramos
   gramos
   miligramos
@@ -243,7 +254,7 @@ model Business {
   ownerId                   String            @unique
   owner                     User              @relation("BusinessOwner", fields: [ownerId], references: [id])
   name                      String
-  description               String
+  type                      BusinessType      @default(minimercado)
   branches                  BusinessBranch[]
   subscriptionPlanId        String?
   subscriptionPlan          SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
@@ -280,8 +291,8 @@ model BusinessBranch {
   cashRegisters       CashRegister[]
   salesByCategory     SaleByCategory[]
   currencyId          String?
-  currency        Currency?                    @relation(fields: [currencyId], references: [id])
-  createdAt       DateTime                     @default(now())
+  currency            Currency?                    @relation(fields: [currencyId], references: [id])
+  createdAt           DateTime                     @default(now())
 }
 
 model CashRegister {

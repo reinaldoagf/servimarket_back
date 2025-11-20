@@ -1,5 +1,7 @@
 // src/business/dto/create-business.dto.ts
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
+import { BusinessType } from '@prisma/client'; // importamos el enum de Prisma
 
 export class CreateBusinessDto {
   @IsNotEmpty()
@@ -11,8 +13,9 @@ export class CreateBusinessDto {
   rif?: string;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @ApiProperty({ enum: BusinessType })
+  @IsEnum(BusinessType)
+  type?: BusinessType;
 
   @IsNotEmpty()
   @IsString()

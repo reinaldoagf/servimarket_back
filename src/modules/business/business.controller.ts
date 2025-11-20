@@ -98,7 +98,7 @@ export class BusinessController {
     return this.service.create({
       name: body.name,
       rif: body.rif,
-      description: body.description ?? '',
+      type: body.type,
       ownerId: body.ownerId,
       branches,
       logo: file ? file.filename : null,
@@ -140,7 +140,7 @@ export class BusinessController {
     const updateData: any = {
       name: body.name,
       rif: body.rif,
-      description: body.description ?? '',
+      type: body.type ?? '',
       branches,
     };
 
