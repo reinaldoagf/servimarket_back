@@ -5,6 +5,12 @@ import { UnitMeasurement, ProductStatus, PriceCalculation } from '@prisma/client
 import { CreateProductTagDto } from './create-product-tag.dto';
 
 export class CreateProductDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Type(() => String)
+  barcode: string | null;
+
   @ApiProperty()
   @IsString()
   name: string;

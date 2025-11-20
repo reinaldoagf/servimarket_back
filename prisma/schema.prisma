@@ -171,6 +171,7 @@ model ProductCategory {
 
 model Product {
   id                     String                @id @default(uuid())
+  barcode                String?
   name                   String
   flavor                 String?
   smell                  String?
@@ -191,7 +192,7 @@ model Product {
   purchases              Purchase[]
   createdAt              DateTime              @default(now())
 
-  @@unique([name, flavor, smell, measurement])
+  @@unique([barcode, name, flavor, smell, measurement])
 }
 
 // tabla para tags de productos

@@ -88,6 +88,7 @@ CREATE TABLE `ProductCategory` (
 -- CreateTable
 CREATE TABLE `Product` (
     `id` VARCHAR(191) NOT NULL,
+    `barcode` VARCHAR(191) NULL,
     `name` VARCHAR(191) NOT NULL,
     `flavor` VARCHAR(191) NULL,
     `smell` VARCHAR(191) NULL,
@@ -102,7 +103,7 @@ CREATE TABLE `Product` (
     `businessId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    UNIQUE INDEX `Product_name_flavor_smell_measurement_key`(`name`, `flavor`, `smell`, `measurement`),
+    UNIQUE INDEX `Product_barcode_name_flavor_smell_measurement_key`(`barcode`, `name`, `flavor`, `smell`, `measurement`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

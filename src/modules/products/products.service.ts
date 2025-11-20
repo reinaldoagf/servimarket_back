@@ -8,6 +8,7 @@ import { PaginatedProductResponseDto } from './dto/paginated-product-response.dt
 
 const SELECT_FIELDS = {
   id: true,
+  barcode: true,
   name: true,
   flavor: true,
   smell: true,
@@ -22,17 +23,6 @@ const SELECT_FIELDS = {
   brand: { select: { id: true, name: true, createdAt: true } },
   category: { select: { id: true, name: true, createdAt: true } },
   business: { select: { id: true, name: true, createdAt: true } },
-  /* stocks: {
-    select: {
-      id: true,
-      units: true,
-      totalSellingPrice: true,
-      purchasePricePerUnit: true,
-      profitPercentage: true,
-      returnOnInvestment: true,
-      createdAt: true,
-    },
-  }, */
   tags: {
     select: {
       id: true,
@@ -63,6 +53,7 @@ export class ProductsService {
 
     if (search) {
       where.OR = [
+        { barcode: { contains: search } },
         { name: { contains: search } },
         { flavor: { contains: search } },
         { smell: { contains: search } },
@@ -133,6 +124,7 @@ export class ProductsService {
       // Crear producto junto con presentaciones si vienen
       const product = await this.service.product.create({
         data: {
+          barcode: dto.barcode ?? null,
           name: dto.name,
           flavor: dto.flavor ?? null,
           smell: dto.smell ?? null,
@@ -160,6 +152,7 @@ export class ProductsService {
       const product = await this.service.product.update({
         where: { id },
         data: {
+          barcode: dto.barcode,
           name: dto.name,
           flavor: dto.flavor,
           smell: dto.smell,
