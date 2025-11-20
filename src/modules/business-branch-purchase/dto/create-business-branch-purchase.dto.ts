@@ -1,7 +1,6 @@
 // src/business-branch-purchase/dto/create-business-branch-purchase.dto.ts
 
 import {
-  IsInt,
   IsOptional,
   IsString,
   IsNumber,
@@ -26,6 +25,14 @@ class PurchaseItemDto {
 
   @IsNumber()
   price: number;
+}
+
+class PurchaseBillPaymentMethodItemDto {
+  @IsString()
+  billPaymentMethodId: string;
+
+  @IsNumber()
+  amountCancelled: number;
 }
 
 export class CreateBusinessBranchPurchaseDto {
@@ -57,6 +64,11 @@ export class CreateBusinessBranchPurchaseDto {
   @Type(() => PurchaseItemDto)
   @ArrayMinSize(1)
   purchases: PurchaseItemDto[];
+
+  @ValidateNested({ each: true })
+  @Type(() => PurchaseBillPaymentMethodItemDto)
+  @ArrayMinSize(1)
+  purchasesBillPaymentMethod: PurchaseBillPaymentMethodItemDto[];
 
   @IsString()
   currency: string;

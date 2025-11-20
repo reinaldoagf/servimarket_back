@@ -75,6 +75,17 @@ const SELECT_FIELDS = {
       product: { select: { id: true, name: true, category: { select: { id: true, name: true } } } },
     },
   },
+  purchasesBillPaymentMethod: {
+    select: {
+      id: true,
+      amountCancelled: true,
+      businessBranchPurchaseId: true,
+      businessBranchPurchase: true,
+      billPaymentMethodId: true,
+      billPaymentMethod: true,
+      createdAt: true,
+    },
+  },
 };
 @Injectable()
 export class BusinessBranchPurchaseService {
@@ -266,6 +277,17 @@ export class BusinessBranchPurchaseService {
         this.metricsWs.emitPurchaseToUser(dto.userId, {
           message: 'Nueva compra registrada',
           purchase,
+        });
+      }
+
+      // Registrar metodos de pago de la compra
+      for (const item of dto.purchasesBillPaymentMethod) {
+        await tx.purchaseBillPaymentMethod.create({
+          data: {
+            amountCancelled: item.amountCancelled,
+            billPaymentMethodId: item.billPaymentMethodId,
+            businessBranchPurchaseId: purchase.id,
+          },
         });
       }
 
@@ -553,6 +575,21 @@ export class BusinessBranchPurchaseService {
 
     if (!purchase) {
       throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
+    }
+
+    await this.service.purchaseBillPaymentMethod.deleteMany({
+      where: { businessBranchPurchaseId: purchase.id },
+    });
+
+    // Registrar metodos de pago de la compra
+    for (const item of dto.purchasesBillPaymentMethod) {
+      await this.service.purchaseBillPaymentMethod.create({
+        data: {
+          amountCancelled: item.amountCancelled,
+          billPaymentMethodId: item.billPaymentMethodId,
+          businessBranchPurchaseId: purchase.id,
+        },
+      });
     }
 
     return this.service.businessBranchPurchase.update({
