@@ -219,6 +219,8 @@ export class CashRegistersService {
       throw new NotFoundException(`CashRegister with ID ${id} not found`);
     }
 
+    console.log({id})
+
     // Consultar ventas asociadas con closingDate == null
     const pendingSales = await this.service.businessBranchPurchase.findMany({
       where: {
@@ -234,6 +236,25 @@ export class CashRegistersService {
         createdAt: true,
         status: true,
         cashRegister: SELECT_FIELDS,
+        purchasesBillPaymentMethod: {
+          select: {
+            id: true,
+            amountCancelled: true,
+            businessBranchPurchaseId: true,
+            businessBranchPurchase: true,
+            billPaymentMethodId: true,
+            billPaymentMethod: {
+              select: {
+                id: true,
+                country: true,
+                currencyId: true,
+                currency: true,
+                name: true,
+              },
+            },
+            createdAt: true,
+          },
+        },
         user: {
           select: {
             id: true,
