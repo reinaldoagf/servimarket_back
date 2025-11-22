@@ -80,6 +80,8 @@ async function main(): Promise<void> {
     where: { coin: 'bolivares' ,code: 'VEF', symbol: 'Bs', },
   });
 
+  await prisma.billPaymentMethod.deleteMany();
+
   await prisma.billPaymentMethod.upsert({
     where: { name: 'efectivo' },
     update: {},
