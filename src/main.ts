@@ -13,6 +13,7 @@ async function bootstrap() {
   /*  app.enableCors(); */ // Enables CORS for all origins
   app.enableCors({
     origin: [
+      'https://servimerca.com', // tu frontend
       'http://servimerca.com', // tu frontend
       'http://localhost:4200', // opcional para desarrollo local
     ], // o el dominio exacto de tu Angular
