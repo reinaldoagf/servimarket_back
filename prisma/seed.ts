@@ -80,8 +80,10 @@ async function main(): Promise<void> {
     where: { coin: 'bolivares' ,code: 'VEF', symbol: 'Bs', },
   });
 
-  await prisma.billPaymentMethod.create({
-    data: {
+  await prisma.billPaymentMethod.upsert({
+    where: { name: 'efectivo' },
+    update: {},
+    create: {
       name: 'efectivo',
       image: null,
       country: 'venezuela',
@@ -89,8 +91,10 @@ async function main(): Promise<void> {
     },
   });
 
-  await prisma.billPaymentMethod.create({
-    data: {
+  await prisma.billPaymentMethod.upsert({
+    where: { name: 'pago móvil' },
+    update: {},
+    create: {
       name: 'pago móvil',
       image: null,
       country: 'venezuela',
@@ -98,8 +102,10 @@ async function main(): Promise<void> {
     },
   });
 
-  await prisma.billPaymentMethod.create({
-    data: {
+  await prisma.billPaymentMethod.upsert({
+    where: { name: 'transferencia bancaria' },
+    update: {},
+    create: {
       name: 'transferencia bancaria',
       image: null,
       country: 'venezuela',
