@@ -10,15 +10,15 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
     prefix: '/uploads/',
   });
-  app.enableCors(); // Enables CORS for all origins
-  /* app.enableCors({
+  /*  app.enableCors(); */ // Enables CORS for all origins
+  app.enableCors({
     origin: [
-      'https://d2x9ou3zmt9m9f.cloudfront.net', // tu frontend
+      'http://servimerca.com', // tu frontend
       'http://localhost:4200', // opcional para desarrollo local
     ], // o el dominio exacto de tu Angular
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-  }); */
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 3000);
