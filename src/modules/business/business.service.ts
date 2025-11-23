@@ -215,16 +215,23 @@ export class BusinessService {
 
       // 🔹 Crear los colaboradores administradores (de forma concurrente y controlada)
       await Promise.all(
-        branches.map((b: BusinessBranch) =>
-          this.service.businessBranchCollaborator.create({
+        branches.map(async (b: BusinessBranch) => {
+          const cashRegister = await this.service.cashRegister.create({
+            data: {
+              branchId: b.id,
+              businessId: business.id,
+            },
+          });
+
+          return this.service.businessBranchCollaborator.create({
             data: {
               branchId: b.id,
               userId: input.ownerId,
-              cashRegisterId: null,
+              cashRegisterId: cashRegister.id,
               isAdmin: true,
             },
-          }),
-        ),
+          });
+        }),
       );
 
       return business;
