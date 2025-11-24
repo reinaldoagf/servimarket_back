@@ -9,6 +9,7 @@ interface CreateBusinessInput {
   rif?: string;
   type?: BusinessType;
   ownerId: string;
+  applyVAT: boolean;
   branches: {
     country: string;
     state: string;
@@ -40,6 +41,7 @@ interface UpdateBusinessInput {
   rif?: string;
   type?: BusinessType;
   logo?: string | null;
+  applyVAT?: boolean;
 
   branches?: BranchUpdateInput[];
   settings?: {
@@ -199,6 +201,7 @@ export class BusinessService {
           type: input.type,
           logo: input.logo,
           ownerId: input.ownerId,
+          applyVAT: input.applyVAT,
           subscriptionDate: new Date(),
           expirationDate: expiredDate,
           branches: {
@@ -339,6 +342,7 @@ export class BusinessService {
           rif: input.rif,
           type: input.type ?? existing.type,
           logo: input.logo,
+          applyVAT: input.applyVAT,
 
           // ❗ Campos que NO deben modificarse
           // ownerId: KEEP

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsEnum, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsEnum, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UnitMeasurement, ProductStatus, PriceCalculation } from '@prisma/client';
 import { CreateProductTagDto } from './create-product-tag.dto';
@@ -26,6 +26,9 @@ export class CreateProductDto {
   @IsString()
   @Type(() => String)
   smell: string | null;
+
+  @IsBoolean()
+  exemptFromVAT: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

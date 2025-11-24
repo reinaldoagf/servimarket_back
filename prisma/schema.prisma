@@ -176,6 +176,7 @@ model Product {
   flavor                 String?
   smell                  String?
   measurement            Float?
+  exemptFromVAT          Boolean               @default(true) // exentos del incremento del IVA
   unitMeasurement        UnitMeasurement?      @default(gramos)
   priceCalculation       PriceCalculation?     @default(unidad)
   packing                ProductPacking        @default(bolsa)
@@ -256,6 +257,7 @@ model Business {
   owner                     User              @relation("BusinessOwner", fields: [ownerId], references: [id])
   name                      String
   type                      BusinessType      @default(minimercado)
+  applyVAT                  Boolean           @default(true)
   branches                  BusinessBranch[]
   subscriptionPlanId        String?
   subscriptionPlan          SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
@@ -409,16 +411,16 @@ model BusinessBranchPurchase { // Factura
 }
 
 model PurchaseBillPaymentMethod {
-  id                        String          @id @default(uuid())
-  amountCancelled           Float           @default(0.0)
+  id                        String                  @id @default(uuid())
+  amountCancelled           Float                   @default(0.0)
   businessBranchPurchaseId  String?
   businessBranchPurchase    BusinessBranchPurchase? @relation(fields: [businessBranchPurchaseId], references: [id])
   billPaymentMethodId       String?
-  billPaymentMethod         BillPaymentMethod? @relation(fields: [billPaymentMethodId], references: [id])
-  createdAt                 DateTime        @default(now())
+  billPaymentMethod         BillPaymentMethod?      @relation(fields: [billPaymentMethodId], references: [id])
+  createdAt                 DateTime                @default(now())
 }
 
-model Setting {
+model Setting { // configuraciones avanzadas
   id               String          @id @default(uuid())
   key              String
   country          String          @default("venezuela")

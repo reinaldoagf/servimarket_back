@@ -100,6 +100,7 @@ export class BusinessController {
       rif: body.rif,
       type: body.type,
       ownerId: body.ownerId,
+      applyVAT: body.applyVAT,
       branches,
       logo: file ? file.filename : null,
     });
