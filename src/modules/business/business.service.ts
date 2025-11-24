@@ -63,6 +63,7 @@ const SELECT_FIELDS = {
   name: true,
   logo: true,
   type: true,
+  applyVAT: true,
   branches: true,
   subscriptionPlan: true,
   subscriptionDate: true,

@@ -100,7 +100,7 @@ export class BusinessController {
       rif: body.rif,
       type: body.type,
       ownerId: body.ownerId,
-      applyVAT: body.applyVAT,
+      applyVAT: body.applyVAT == 'true',
       branches,
       logo: file ? file.filename : null,
     });
@@ -161,6 +161,7 @@ export class BusinessController {
       name: body.name,
       rif: body.rif,
       type: body.type ?? '',
+      applyVAT: body.applyVAT == 'true',
       branches,
       settings,
     };
