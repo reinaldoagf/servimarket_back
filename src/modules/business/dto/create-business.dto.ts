@@ -24,4 +24,8 @@ export class CreateBusinessDto {
   @IsOptional()
   @IsString()
   branches?: string; // llega como JSON string
+
+  @IsOptional()
+  @IsString()
+  settings?: string; // llega como JSON string
 }

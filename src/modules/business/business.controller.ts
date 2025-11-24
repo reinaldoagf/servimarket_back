@@ -136,12 +136,32 @@ export class BusinessController {
         throw new Error('Invalid branches JSON format');
       }
     }
+
+    let settings: {
+      id: string;
+      key: string;
+      country: string;
+      floatValue: number;
+      stringValue: string;
+      userId: string;
+      businessId: string;
+      branchId: string;
+      createdAt: Date;
+    }[] = [];
+    if (body.settings) {
+      try {
+        settings = JSON.parse(body.settings) || [];
+      } catch {
+        throw new Error('Invalid settings JSON format');
+      }
+    }
     // Construimos el objeto data dinámicamente
     const updateData: any = {
       name: body.name,
       rif: body.rif,
       type: body.type ?? '',
       branches,
+      settings,
     };
 
     // Solo actualizar 'logo' si viene file
