@@ -22,6 +22,7 @@ const SELECT_FIELDS = {
       measurement: true,
       flavor: true,
       smell: true,
+      exemptFromVAT: true,
       unitMeasurement: true,
       createdAt: true,
       brandId: true,

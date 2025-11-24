@@ -62,6 +62,8 @@ async function main(): Promise<void> {
 
   console.log('✅ Monedas creadas');
 
+  await prisma.billPaymentMethod.deleteMany();
+
   // Validar nombre único
   const usdCurrency = await prisma.currency.findUnique({
     where: { coin: 'dollar' ,code: 'USD', symbol: '$', },
@@ -80,7 +82,6 @@ async function main(): Promise<void> {
     where: { coin: 'bolivares' ,code: 'VEF', symbol: 'Bs', },
   });
 
-  await prisma.billPaymentMethod.deleteMany();
 
   await prisma.billPaymentMethod.upsert({
     where: { name: 'efectivo' },
