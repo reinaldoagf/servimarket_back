@@ -1,5 +1,5 @@
 {
-  "name": "marketcloud-backend",
+  "name": "servimerca-backend",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -28,7 +28,7 @@
     "m:run:dev": "export NODE_ENV=develop && npm run prisma:migrate:dev",
     "m:gen": "export NODE_ENV=production && npm run prisma:generate",
     "m:mig": "export NODE_ENV=production && npm run prisma:migrate:deploy && npm run seed",
-    "m:run": "export NODE_ENV=production && pm2 start dist/src/main.js --name servimarket-api"
+    "m:run": "export NODE_ENV=production && pm2 start dist/src/main.js --name servimerca-api"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",

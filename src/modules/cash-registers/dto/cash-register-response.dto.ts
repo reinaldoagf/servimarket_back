@@ -4,7 +4,7 @@ export class CashRegisterResponseDto {
   id: string;
   description: string | null;
   collaborator: any;
-  businessId: string;
+  businessId: string | null;
   branchId: string | null;
   createdAt: Date;
 }

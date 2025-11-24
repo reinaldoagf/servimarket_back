@@ -120,7 +120,7 @@ async function main(): Promise<void> {
   await prisma.user.createMany({
     data: [
       {
-        email: 'admin@servimarket.com',
+        email: 'admin@servimerca.com',
         name: 'Administrador',
         username: 'admin',
         dni: '0000000',

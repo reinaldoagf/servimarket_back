@@ -398,6 +398,9 @@ export class BusinessService {
       await this.service.pending.deleteMany({
         where: { branchId: { in: branchIds } },
       });
+      await this.service.setting.deleteMany({
+        where: { branchId: { in: branchIds } },
+      });
     }
 
     // 🔹 Luego borrar los branches

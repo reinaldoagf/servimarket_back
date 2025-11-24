@@ -140,7 +140,8 @@ CREATE TABLE `Pending` (
     `title` VARCHAR(191) NOT NULL,
     `message` VARCHAR(191) NOT NULL,
     `eventDate` DATETIME(3) NULL,
-    `businessId` VARCHAR(191) NOT NULL,
+    `businessRef` VARCHAR(191) NULL,
+    `businessId` VARCHAR(191) NULL,
     `branchId` VARCHAR(191) NOT NULL,
     `createdById` VARCHAR(191) NULL,
     `linkedUserId` VARCHAR(191) NULL,
@@ -202,7 +203,9 @@ CREATE TABLE `BusinessBranch` (
 CREATE TABLE `CashRegister` (
     `id` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NULL,
-    `businessId` VARCHAR(191) NOT NULL,
+    `businessRef` VARCHAR(191) NULL,
+    `businessId` VARCHAR(191) NULL,
+    `branchRef` VARCHAR(191) NULL,
     `branchId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -330,7 +333,9 @@ CREATE TABLE `Setting` (
     `floatValue` DOUBLE NULL,
     `stringValue` VARCHAR(191) NULL,
     `userId` VARCHAR(191) NULL,
+    `businessRef` VARCHAR(191) NULL,
     `businessId` VARCHAR(191) NULL,
+    `branchRef` VARCHAR(191) NULL,
     `branchId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -400,7 +405,7 @@ ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_productId_fkey` FOREIGN 
 ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Pending` ADD CONSTRAINT `Pending_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Pending` ADD CONSTRAINT `Pending_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Pending` ADD CONSTRAINT `Pending_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -424,7 +429,7 @@ ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_businessId_fkey` FOR
 ALTER TABLE `BusinessBranch` ADD CONSTRAINT `BusinessBranch_currencyId_fkey` FOREIGN KEY (`currencyId`) REFERENCES `Currency`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

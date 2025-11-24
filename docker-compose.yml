@@ -3,19 +3,19 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: marketcloud_mysql
+    container_name: servimerca_mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-marketcloud_db}
-      MYSQL_USER: ${MYSQL_USER:-marketcloud}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-marketcloud123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-servimerca_db}
+      MYSQL_USER: ${MYSQL_USER:-servimerca}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-servimerca123}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - marketcloud_network
+      - servimerca_network
 
   backend:
     build:
@@ -28,7 +28,7 @@ services:
       - mysql
     environment:
       NODE_ENV: production
-      DATABASE_URL: mysql://${MYSQL_USER:-marketcloud}:${MYSQL_PASSWORD:-marketcloud123}@mysql:3306/${MYSQL_DATABASE:-marketcloud_db}
+      DATABASE_URL: mysql://${MYSQL_USER:-servimerca}:${MYSQL_PASSWORD:-servimerca123}@mysql:3306/${MYSQL_DATABASE:-servimerca_db}
       PORT: 3000
     command: >
       sh -c "
@@ -38,13 +38,13 @@ services:
         npm run start:prod
       "
     networks:
-      - marketcloud_network
+      - servimerca_network
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
 
 networks:
-  marketcloud_network:
+  servimerca_network:
     driver: bridge
 
 volumes:

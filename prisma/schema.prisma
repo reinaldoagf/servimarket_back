@@ -227,8 +227,9 @@ model Pending {
   title         String
   message       String
   eventDate     DateTime?
-  businessId    String
-  business      Business       @relation(fields: [businessId], references: [id])
+  businessRef   String?
+  businessId    String?
+  business      Business?      @relation(fields: [businessId], references: [id])
   branchId      String
   branch        BusinessBranch @relation(fields: [branchId], references: [id])
   createdById   String?
@@ -302,8 +303,10 @@ model CashRegister {
   id                String                       @id @default(uuid())
   description       String?
   collaborator      BusinessBranchCollaborator?
-  businessId        String
-  business          Business                     @relation(fields: [businessId], references: [id])
+  businessRef       String?
+  businessId        String?
+  business          Business?                    @relation(fields: [businessId], references: [id])
+  branchRef         String?
   branchId          String?
   branch            BusinessBranch?              @relation(fields: [branchId], references: [id])
   purchases         BusinessBranchPurchase[]
@@ -428,8 +431,10 @@ model Setting { // configuraciones avanzadas
   stringValue      String?
   userId           String?
   user             User?           @relation(fields: [userId], references: [id])
+  businessRef      String?
   businessId       String?
   business         Business?       @relation(fields: [businessId], references: [id])
+  branchRef        String?
   branchId         String?
   branch           BusinessBranch? @relation(fields: [branchId], references: [id])
   createdAt        DateTime        @default(now())
