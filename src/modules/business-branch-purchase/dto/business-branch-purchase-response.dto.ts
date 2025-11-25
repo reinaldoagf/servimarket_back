@@ -43,8 +43,8 @@ export class BusinessBranchPurchaseResponseDto {
     id: string;
     unitsOrMeasures: number;
     price: number;
-    productId: string;
-    product: { id: string; name: string };
+    productId: string | null;
+    product: { id: string; name: string } | null;
     createdAt: Date;
   }[];
 }

@@ -48,6 +48,14 @@ export class ProductStockController {
     );
   }
 
+  @Get('/total-by-filters')
+  @UseGuards(JwtAuthGuard)
+  async getTotalByFilters(
+    @Query('branchId') branchId = ''
+  ): Promise<number> {
+    return this.service.getTotalByFilters(branchId);
+  }
+  
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() dto: UpdateProductStockDto) {

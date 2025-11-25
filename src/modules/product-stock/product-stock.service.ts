@@ -44,6 +44,19 @@ const SELECT_FIELDS = {
 export class ProductStockService {
   constructor(private service: PrismaService) {}
 
+  // ✅ Obtener total por filtros
+  async getTotalByFilters(branchId: string): Promise<number> {
+    // Construimos los filtros dinámicamente
+    const where: Prisma.ProductStockWhereInput = {};
+
+    if (branchId?.length) {
+      const existing = await this.service.businessBranch.findUnique({ where: { id: branchId } });
+      if (!existing) throw new NotFoundException(`BusinessBranch with ID ${branchId} not found`);
+      where.branchId = branchId;
+    }
+    return await this.service.productStock.count({ where });
+  }
+
   // ✅ Obtener por filtros
   async getByFilters(
     branchId: string,
@@ -88,12 +101,8 @@ export class ProductStockService {
       };
     }
 
-    const [total, distinctProducts, data] = await Promise.all([
+    const [total, data] = await Promise.all([
       this.service.productStock.count({ where }),
-      this.service.productStock.groupBy({
-        by: ['productId'],
-        where,
-      }),
       this.service.productStock.findMany({
         where,
         select: SELECT_FIELDS,
@@ -102,12 +111,10 @@ export class ProductStockService {
         take: pageSize,
       }),
     ]);
-    const totalByProducts = distinctProducts.length;
 
     return {
       data,
       total,
-      totalByProducts,
       page,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
@@ -126,9 +133,7 @@ export class ProductStockService {
     });
 
     if (existing) {
-      throw new BadRequestException(
-        `A ProductStock record with this combination already exists.`,
-      );
+      throw new BadRequestException(`A ProductStock record with this combination already exists.`);
     }
 
     try {
@@ -187,12 +192,32 @@ export class ProductStockService {
     const product = await this.service.product.findUnique({ where: { id: productId } });
     if (!product) throw new NotFoundException(`Product with ID ${productId} not found`);
 
+    const existing = await this.service.productStock.findFirst({
+      where: { branchId, productId },
+    });
+
+    if (!existing)
+      throw new NotFoundException(
+        `ProductStock with branchId ${branchId} and productId ${productId} not found`,
+      );
+
+    if (existing?.id) {
+      await this.service.purchase.updateMany({
+        where: { productStockId: existing.id },
+        data: {
+          productStockRef: existing.id,
+        },
+      });
+    }
+
     const deleted = await this.service.productStock.deleteMany({
       where: { branchId, productId },
     });
 
     if (deleted.count === 0) {
-      throw new NotFoundException(`No ProductStock records found for product ${productId} in branch ${branchId}`);
+      throw new NotFoundException(
+        `No ProductStock records found for product ${productId} in branch ${branchId}`,
+      );
     }
 
     return { message: `Deleted ${deleted.count} ProductStock record(s)` };

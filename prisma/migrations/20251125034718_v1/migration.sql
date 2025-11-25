@@ -280,10 +280,12 @@ CREATE TABLE `SaleByCategory` (
 -- CreateTable
 CREATE TABLE `Purchase` (
     `id` VARCHAR(191) NOT NULL,
-    `businessBranchPurchaseId` VARCHAR(191) NOT NULL,
-    `productId` VARCHAR(191) NOT NULL,
+    `businessBranchPurchaseRef` VARCHAR(191) NULL,
+    `businessBranchPurchaseId` VARCHAR(191) NULL,
+    `productRef` VARCHAR(191) NULL,
+    `productId` VARCHAR(191) NULL,
     `productStockRef` VARCHAR(191) NULL,
-    `productStockId` VARCHAR(191) NOT NULL,
+    `productStockId` VARCHAR(191) NULL,
     `unitsOrMeasures` DOUBLE NOT NULL DEFAULT 1.0,
     `price` DOUBLE NOT NULL DEFAULT 0.0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -474,13 +476,13 @@ ALTER TABLE `SaleByCategory` ADD CONSTRAINT `SaleByCategory_businessId_fkey` FOR
 ALTER TABLE `SaleByCategory` ADD CONSTRAINT `SaleByCategory_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_businessBranchPurchaseId_fkey` FOREIGN KEY (`businessBranchPurchaseId`) REFERENCES `BusinessBranchPurchase`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_businessBranchPurchaseId_fkey` FOREIGN KEY (`businessBranchPurchaseId`) REFERENCES `BusinessBranchPurchase`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productStockId_fkey` FOREIGN KEY (`productStockId`) REFERENCES `ProductStock`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Purchase` ADD CONSTRAINT `Purchase_productStockId_fkey` FOREIGN KEY (`productStockId`) REFERENCES `ProductStock`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchPurchase` ADD CONSTRAINT `BusinessBranchPurchase_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

@@ -4,7 +4,6 @@ import { ProductStockResponseDto } from './product-stock-response.dto';
 export class PaginatedProductStockResponseDto {
   data: ProductStockResponseDto[];
   total: number;
-  totalByProducts: number;
   page: number;
   pageSize: number;
   totalPages: number;
