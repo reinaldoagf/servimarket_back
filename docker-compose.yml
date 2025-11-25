@@ -28,7 +28,7 @@ services:
       - mysql
     environment:
       NODE_ENV: production
-      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@ec2-13-59-229-36.us-east-2.compute.amazonaws.com:3306/${MYSQL_DATABASE}
       PORT: 3000
     command: >
       sh -c "
