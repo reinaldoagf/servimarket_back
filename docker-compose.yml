@@ -6,10 +6,10 @@ services:
     container_name: servimerca_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-servimerca_db}
-      MYSQL_USER: ${MYSQL_USER:-servimerca}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-servimerca123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -28,7 +28,7 @@ services:
       - mysql
     environment:
       NODE_ENV: production
-      DATABASE_URL: mysql://${MYSQL_USER:-servimerca}:${MYSQL_PASSWORD:-servimerca123}@mysql:3306/${MYSQL_DATABASE:-servimerca_db}
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
       PORT: 3000
     command: >
       sh -c "
