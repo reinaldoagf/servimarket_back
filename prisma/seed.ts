@@ -95,10 +95,10 @@ async function main(): Promise<void> {
   });
 
   await prisma.billPaymentMethod.upsert({
-    where: { name: 'pago móvil' },
+    where: { name: 'pago móvil / transferencia bancaria' },
     update: {},
     create: {
-      name: 'pago móvil',
+      name: 'pago móvil / transferencia bancaria',
       image: null,
       country: 'venezuela',
       currencyId: bsCurrency?.id ?? null,
@@ -106,10 +106,10 @@ async function main(): Promise<void> {
   });
 
   await prisma.billPaymentMethod.upsert({
-    where: { name: 'transferencia bancaria' },
+    where: { name: 'tarjeta de crédito (punto de venta)' },
     update: {},
     create: {
-      name: 'transferencia bancaria',
+      name: 'tarjeta de crédito (punto de venta)',
       image: null,
       country: 'venezuela',
       currencyId: bsCurrency?.id ?? null,

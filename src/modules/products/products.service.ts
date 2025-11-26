@@ -62,6 +62,7 @@ export class ProductsService {
         { category: { name: { contains: search } } },
       ];
     }
+    
     // 🔹 Filtro por businessId si existe
     if (businessId) {
       where.OR = [
