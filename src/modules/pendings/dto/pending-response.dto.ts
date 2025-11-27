@@ -14,6 +14,6 @@ export class PendingResponseDto {
     state: string;
     city: string;
     address: string;
-  };
+  } | null;
   createdAt: Date;
 }

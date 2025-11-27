@@ -19,6 +19,7 @@ import { MetricsModule } from './modules/metrics/metrics.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { BillPaymentMethodsModule } from './modules/bill-payment-methods/bill-payment-methods.module';
+import { CashRegisterClosingHistoryModule } from './modules/cash-register-closing-history/cash-register-closing-history.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { BillPaymentMethodsModule } from './modules/bill-payment-methods/bill-pa
     SettingsModule,
     CurrenciesModule,
     BillPaymentMethodsModule,
+    CashRegisterClosingHistoryModule
   ],
   providers: [],
 })

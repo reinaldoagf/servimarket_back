@@ -596,7 +596,7 @@ export class BusinessBranchPurchaseService {
       where: { id },
       data: {
         amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
-        status: dto.amountCancelled == purchase.totalAmount ? 'pagado' : purchase.status,
+        status: dto.status ?? 'pendiente',
       },
     });
   }

@@ -106,6 +106,18 @@ async function main(): Promise<void> {
   });
 
   await prisma.billPaymentMethod.upsert({
+    where: { name: 'tarjeta de débito (punto de venta)' },
+    update: {},
+    create: {
+      name: 'tarjeta de débito (punto de venta)',
+      image: null,
+      country: 'venezuela',
+      currencyId: bsCurrency?.id ?? null,
+    },
+  });
+
+
+  await prisma.billPaymentMethod.upsert({
     where: { name: 'tarjeta de crédito (punto de venta)' },
     update: {},
     create: {
@@ -117,6 +129,33 @@ async function main(): Promise<void> {
   });
 
   console.log('✅ Metodos de pago de facturas creadas');
+  await prisma.productCategory.createMany({
+    data: [
+      {name: 'Cuidado personal' },
+      {name: 'Alimentos' },
+      {name: 'Dulces' },
+      {name: 'Productos de limpieza' },
+      {name: 'Bebidas' },
+      {name: 'Bebidas alcohólicas' },
+      {name: 'Medicamentos' },
+    ],
+    skipDuplicates: true,
+  });
+  console.log('✅ Categorías creadas');
+
+  await prisma.productBrand.createMany({
+    data: [
+      {name: 'Ace' },
+      {name: 'Ariel' },
+      {name: 'PAN' },
+      {name: 'Flips' },
+      {name: 'Colgate' },
+      {name: 'Mary' },
+    ],
+    skipDuplicates: true,
+  });
+  console.log('✅ Marcas creadas');
+
 
   await prisma.user.createMany({
     data: [

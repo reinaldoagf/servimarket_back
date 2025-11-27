@@ -22,8 +22,8 @@ const SELECT_FIELDS = {
 export class RolesService {
   constructor(private service: PrismaService) {}
 
-  async getByFilters(page = 1, size = 10, search = ''): Promise<PaginatedRoleResponseDto> {
-    const skip = (page - 1) * size;
+  async getByFilters(page = 1, pageSize = 10, search = ''): Promise<PaginatedRoleResponseDto> {
+    const skip = (page - 1) * pageSize;
 
     const where: Prisma.RoleWhereInput = search
       ? { OR: [{ name: { contains: search } }, { key: { contains: search } }] }
@@ -36,7 +36,7 @@ export class RolesService {
         select: SELECT_FIELDS,
         orderBy: { createdAt: 'desc' },
         skip,
-        take: size,
+        take: pageSize,
       }),
     ]);
 
@@ -44,8 +44,8 @@ export class RolesService {
       data,
       total,
       page,
-      pageSize: size,
-      totalPages: Math.ceil(total / size),
+      pageSize: pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 

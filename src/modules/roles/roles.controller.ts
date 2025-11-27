@@ -15,10 +15,10 @@ export class RolesController {
   @UseGuards(JwtAuthGuard)
   async getByFilters(
     @Query('page', ParseIntPipe) page = 1,
-    @Query('size', ParseIntPipe) size = 10,
+    @Query('pageSize', ParseIntPipe) pageSize = 10,
     @Query('search') search = '',
   ): Promise<PaginatedRoleResponseDto> {
-    return this.service.getByFilters(page, size, search);
+    return this.service.getByFilters(page, pageSize, search);
   }
 
   @Get(':id')

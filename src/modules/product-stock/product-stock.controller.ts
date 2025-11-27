@@ -31,7 +31,7 @@ export class ProductStockController {
   async getByFilters(
     @Query('branchId') branchId = '',
     @Query('page', ParseIntPipe) page = '1',
-    @Query('size', ParseIntPipe) pageSize = '10',
+    @Query('pageSize', ParseIntPipe) pageSize = '10',
     @Query('search') search = '',
     @Query('dateKey') dateKey = '',
     @Query('startDate') startDate = '',

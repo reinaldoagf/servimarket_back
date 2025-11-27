@@ -201,15 +201,17 @@ export class MetricsService {
     // Estructura: branchId -> month(1-12) -> categoryId -> inversión
 
     for (const stock of stocks) {
-      const branchKey = stock.branchId;
-      const categoryKey = stock.product?.categoryId ?? 0;
-      const monthKey = new Date(stock.createdAt).getMonth() + 1; // enero=1, diciembre=12
+      if(stock.branchId) {
+        const branchKey = stock.branchId;
+        const categoryKey = stock.product?.categoryId ?? 0;
+        const monthKey = new Date(stock.createdAt).getMonth() + 1; // enero=1, diciembre=12
 
-      if (!grouped[branchKey]) grouped[branchKey] = {};
-      if (!grouped[branchKey][monthKey]) grouped[branchKey][monthKey] = {};
-      if (!grouped[branchKey][monthKey][categoryKey]) grouped[branchKey][monthKey][categoryKey] = 0;
+        if (!grouped[branchKey]) grouped[branchKey] = {};
+        if (!grouped[branchKey][monthKey]) grouped[branchKey][monthKey] = {};
+        if (!grouped[branchKey][monthKey][categoryKey]) grouped[branchKey][monthKey][categoryKey] = 0;
 
-      grouped[branchKey][monthKey][categoryKey] += ((stock.salePrice ?? 0) * (stock.availables ?? 0));
+        grouped[branchKey][monthKey][categoryKey] += ((stock.salePrice ?? 0) * (stock.availables ?? 0));
+      }
     }
 
     // 4️⃣ Asegurar que todos los meses y categorías existan (aunque sea con 0 inversión)

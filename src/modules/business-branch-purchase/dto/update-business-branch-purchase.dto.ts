@@ -1,6 +1,7 @@
 // src/auth/dto/update-auth.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, ValidateNested, ArrayMinSize } from 'class-validator';
+import { PurchaseStatus } from '@prisma/client';
+import { IsNumber, IsEnum, IsString, ValidateNested, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PurchaseBillPaymentMethodItemDto {
@@ -20,4 +21,7 @@ export class UpdateBusinessBranchPurchaseDto {
   @Type(() => PurchaseBillPaymentMethodItemDto)
   @ArrayMinSize(1)
   purchasesBillPaymentMethod: PurchaseBillPaymentMethodItemDto[];
+  
+  @IsEnum(PurchaseStatus)
+  status: PurchaseStatus;
 }

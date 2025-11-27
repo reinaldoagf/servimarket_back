@@ -124,7 +124,7 @@ export class CashRegistersService {
       data: dto,
     });
   }
-  async closeSales(id: string) {
+  async closeSales(requestingUserID: string, id: string) {
     // 🔹 1️⃣ Verificar si la caja existe
     const cashRegister = await this.service.cashRegister.findUnique({
       where: { id },
@@ -194,6 +194,30 @@ export class CashRegistersService {
     const totalClosedAmount = pendingSales.reduce((acc, sale) => acc + (sale.totalAmount || 0), 0);
 
     // 🔹 6️⃣ Retornar resumen
+    
+    const cashRegisterClosingHistory = await this.service.cashRegisterClosingHistory.create({
+      data: {
+        closedById: requestingUserID,
+        closedCount: pendingSales.length,
+        totalClosedAmount,
+        closingDate: now,
+        branchId: cashRegister.branchId,
+        cashRegisterId: cashRegister.id,
+      },
+    });
+
+    await Promise.all(
+      pendingSales.map(p =>
+        this.service.businessBranchPurchaseClosedSale.create({
+          data: { 
+            businessBranchPurchaseId: p.id,
+            cashRegisterClosingHistoryId: cashRegisterClosingHistory.id
+          },
+        }),
+      ),
+    );
+    
+    // Retornar resumen
     return {
       message: 'Sales successfully closed',
       closedCount: pendingSales.length,

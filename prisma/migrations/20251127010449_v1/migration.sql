@@ -112,7 +112,8 @@ CREATE TABLE `Product` (
 CREATE TABLE `ProductTag` (
     `id` VARCHAR(191) NOT NULL,
     `tag` VARCHAR(191) NOT NULL,
-    `productId` VARCHAR(191) NOT NULL,
+    `productRef` VARCHAR(191) NULL,
+    `productId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -126,8 +127,10 @@ CREATE TABLE `ProductStock` (
     `purchasePrice` DOUBLE NOT NULL DEFAULT 0.0,
     `profitPercentage` DOUBLE NOT NULL DEFAULT 0.0,
     `returnOnInvestment` DOUBLE NOT NULL DEFAULT 0.0,
-    `productId` VARCHAR(191) NOT NULL,
-    `branchId` VARCHAR(191) NOT NULL,
+    `productRef` VARCHAR(191) NULL,
+    `productId` VARCHAR(191) NULL,
+    `branchRef` VARCHAR(191) NULL,
+    `branchId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `ProductStock_productId_branchId_key`(`productId`, `branchId`),
@@ -142,7 +145,8 @@ CREATE TABLE `Pending` (
     `eventDate` DATETIME(3) NULL,
     `businessRef` VARCHAR(191) NULL,
     `businessId` VARCHAR(191) NULL,
-    `branchId` VARCHAR(191) NOT NULL,
+    `branchRef` VARCHAR(191) NULL,
+    `branchId` VARCHAR(191) NULL,
     `createdById` VARCHAR(191) NULL,
     `linkedUserId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -207,6 +211,35 @@ CREATE TABLE `CashRegister` (
     `businessId` VARCHAR(191) NULL,
     `branchRef` VARCHAR(191) NULL,
     `branchId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CashRegisterClosingHistory` (
+    `id` VARCHAR(191) NOT NULL,
+    `closedCount` INTEGER NOT NULL DEFAULT 1,
+    `totalClosedAmount` DOUBLE NOT NULL DEFAULT 0.0,
+    `closingDate` DATETIME(3) NOT NULL,
+    `branchRef` VARCHAR(191) NULL,
+    `branchId` VARCHAR(191) NULL,
+    `closedByRef` VARCHAR(191) NULL,
+    `closedById` VARCHAR(191) NULL,
+    `cashRegisterRef` VARCHAR(191) NULL,
+    `cashRegisterId` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `BusinessBranchPurchaseClosedSale` (
+    `id` VARCHAR(191) NOT NULL,
+    `businessBranchPurchaseRef` VARCHAR(191) NULL,
+    `businessBranchPurchaseId` VARCHAR(191) NULL,
+    `cashRegisterClosingHistoryRef` VARCHAR(191) NULL,
+    `cashRegisterClosingHistoryId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -398,19 +431,19 @@ ALTER TABLE `Product` ADD CONSTRAINT `Product_brandId_fkey` FOREIGN KEY (`brandI
 ALTER TABLE `Product` ADD CONSTRAINT `Product_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductTag` ADD CONSTRAINT `ProductTag_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ProductTag` ADD CONSTRAINT `ProductTag_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ProductStock` ADD CONSTRAINT `ProductStock_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Pending` ADD CONSTRAINT `Pending_businessId_fkey` FOREIGN KEY (`businessId`) REFERENCES `Business`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Pending` ADD CONSTRAINT `Pending_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Pending` ADD CONSTRAINT `Pending_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Pending` ADD CONSTRAINT `Pending_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -435,6 +468,21 @@ ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_businessId_fkey` FOREIGN
 
 -- AddForeignKey
 ALTER TABLE `CashRegister` ADD CONSTRAINT `CashRegister_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CashRegisterClosingHistory` ADD CONSTRAINT `CashRegisterClosingHistory_branchId_fkey` FOREIGN KEY (`branchId`) REFERENCES `BusinessBranch`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CashRegisterClosingHistory` ADD CONSTRAINT `CashRegisterClosingHistory_closedById_fkey` FOREIGN KEY (`closedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CashRegisterClosingHistory` ADD CONSTRAINT `CashRegisterClosingHistory_cashRegisterId_fkey` FOREIGN KEY (`cashRegisterId`) REFERENCES `CashRegister`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `BusinessBranchPurchaseClosedSale` ADD CONSTRAINT `BusinessBranchPurchaseClosedSale_businessBranchPurchaseId_fkey` FOREIGN KEY (`businessBranchPurchaseId`) REFERENCES `BusinessBranchPurchase`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `BusinessBranchPurchaseClosedSale` ADD CONSTRAINT `BusinessBranchPurchaseClosedSale_cashRegisterClosingHistory_fkey` FOREIGN KEY (`cashRegisterClosingHistoryId`) REFERENCES `CashRegisterClosingHistory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `BusinessBranchCollaborator` ADD CONSTRAINT `BusinessBranchCollaborator_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

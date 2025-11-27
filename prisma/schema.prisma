@@ -115,42 +115,43 @@ model RolePage {
 }
 
 model User {
-  id                    String          @id @default(uuid())
-  avatar                String?
-  name                  String
-  email                 String          @unique
-  username              String          @unique
-  dni                   String?         @unique
-  dniFile               String?
-  password              String    
-  status                UserStatus      @default(activo)
-  hasAllPermissions     Boolean         @default(false)
-  emailVerifiedAt       DateTime?
-  verificationToken     String?
+  id                           String          @id @default(uuid())
+  avatar                       String?
+  name                         String
+  email                        String          @unique
+  username                     String          @unique
+  dni                          String?         @unique
+  dniFile                      String?
+  password                     String    
+  status                       UserStatus      @default(activo)
+  hasAllPermissions            Boolean         @default(false)
+  emailVerifiedAt              DateTime?
+  verificationToken            String?
 
-  roleId                String?
-  role                  Role?           @relation(fields: [roleId], references: [id])
+  roleId                       String?
+  role                         Role?           @relation(fields: [roleId], references: [id])
 
-  country               String          @default("venezuela")
-  state                 String
-  city                  String
+  country                      String          @default("venezuela")
+  state                        String
+  city                         String
 
-  businessId            String?
+  businessId                   String?
   // Relación opcional con Business
-  business              Business?       @relation("BusinessOwner")
+  business                     Business?       @relation("BusinessOwner")
 
   // relaciones
-  createdPendings       Pending[]       @relation("CreatedBy")
-  linkedPendings        Pending[]       @relation("LinkedUser")
+  createdPendings              Pending[]       @relation("CreatedBy")
+  linkedPendings               Pending[]       @relation("LinkedUser")
 
-  collaborations        BusinessBranchCollaborator[]
-  clients               BusinessBranchClient[]
-  suppliers             BusinessBranchSupplier[]
-  purchases             BusinessBranchPurchase[]
-  settings              Setting[]
-  salesByCategory       SaleByCategory[]
-  purchasesByCategory   PurchaseByCategory[]
-  createdAt             DateTime        @default(now())
+  collaborations               BusinessBranchCollaborator[]
+  clients                      BusinessBranchClient[]
+  suppliers                    BusinessBranchSupplier[]
+  purchases                    BusinessBranchPurchase[]
+  settings                     Setting[]
+  salesByCategory              SaleByCategory[]
+  purchasesByCategory          PurchaseByCategory[]
+  cashRegisterClosingHistory   CashRegisterClosingHistory[]
+  createdAt                    DateTime        @default(now())
 }
 
 model ProductBrand {
@@ -200,8 +201,9 @@ model Product {
 model ProductTag {
   id                     String          @id @default(uuid())
   tag                    String
-  productId              String
-  product                Product         @relation(fields: [productId], references: [id])
+  productRef             String?
+  productId              String?
+  product                Product?         @relation(fields: [productId], references: [id])
   createdAt              DateTime        @default(now())
 }
 
@@ -212,10 +214,12 @@ model ProductStock {
   purchasePrice        Float            @default(0.0)
   profitPercentage     Float            @default(0.0)
   returnOnInvestment   Float            @default(0.0)
-  productId            String
+  productRef           String?
+  productId            String?
   product              Product?         @relation(fields: [productId], references: [id])
-  branchId             String
-  branch               BusinessBranch   @relation(fields: [branchId], references: [id])
+  branchRef            String?
+  branchId             String?
+  branch               BusinessBranch?  @relation(fields: [branchId], references: [id])
   createdAt            DateTime         @default(now())
   purchases            Purchase[]
   
@@ -223,20 +227,21 @@ model ProductStock {
 }
 
 model Pending {
-  id            String         @id @default(uuid())
+  id            String          @id @default(uuid())
   title         String
   message       String
   eventDate     DateTime?
   businessRef   String?
   businessId    String?
-  business      Business?      @relation(fields: [businessId], references: [id])
-  branchId      String
-  branch        BusinessBranch @relation(fields: [branchId], references: [id])
+  business      Business?       @relation(fields: [businessId], references: [id])
+  branchRef     String?
+  branchId      String?
+  branch        BusinessBranch? @relation(fields: [branchId], references: [id])
   createdById   String?
-  createdBy     User?          @relation("CreatedBy", fields: [createdById], references: [id])
+  createdBy     User?           @relation("CreatedBy", fields: [createdById], references: [id])
   linkedUserId  String?
-  linkedUser    User?          @relation("LinkedUser", fields: [linkedUserId], references: [id])
-  createdAt     DateTime       @default(now())
+  linkedUser    User?           @relation("LinkedUser", fields: [linkedUserId], references: [id])
+  createdAt     DateTime        @default(now())
 }
 
 model SubscriptionPlan {
@@ -275,42 +280,73 @@ model Business {
 }
 
 model BusinessBranch {
-  id                  String                       @id @default(uuid())
-  businessId          String?
-  business            Business?                    @relation(fields: [businessId], references: [id])
-  country             String                       @default("venezuela")
-  state               String
-  city                String
-  address             String
-  phone               String
-  schedule247         Boolean                      @default(false)
-  itsOpen             Boolean                      @default(true)
-  businessHours       Json?
-  stocks              ProductStock[]
-  collaborators       BusinessBranchCollaborator[]
-  clients             BusinessBranchClient[]
-  suppliers           BusinessBranchSupplier[]
-  pendings            Pending[]
-  settings            Setting[]
-  cashRegisters       CashRegister[]
-  salesByCategory     SaleByCategory[]
-  currencyId          String?
-  currency            Currency?                    @relation(fields: [currencyId], references: [id])
-  createdAt           DateTime                     @default(now())
+  id                           String                       @id @default(uuid())
+  businessId                   String?
+  business                     Business?                    @relation(fields: [businessId], references: [id])
+  country                      String                       @default("venezuela")
+  state                        String
+  city                         String
+  address                      String
+  phone                        String
+  schedule247                  Boolean                      @default(false)
+  itsOpen                      Boolean                      @default(true)
+  businessHours                Json?
+  stocks                       ProductStock[]
+  collaborators                BusinessBranchCollaborator[]
+  clients                      BusinessBranchClient[]
+  suppliers                    BusinessBranchSupplier[]
+  pendings                     Pending[]
+  settings                     Setting[]
+  cashRegisters                CashRegister[]
+  salesByCategory              SaleByCategory[]
+  cashRegisterClosingHistory   CashRegisterClosingHistory[]
+  currencyId                   String?
+  currency                     Currency?                    @relation(fields: [currencyId], references: [id])
+  createdAt                    DateTime                     @default(now())
 }
 
 model CashRegister {
-  id                String                       @id @default(uuid())
-  description       String?
-  collaborator      BusinessBranchCollaborator?
-  businessRef       String?
-  businessId        String?
-  business          Business?                    @relation(fields: [businessId], references: [id])
+  id                         String                       @id @default(uuid())
+  description                String?
+  collaborator               BusinessBranchCollaborator?
+  businessRef                String?
+  businessId                 String?
+  business                   Business?                    @relation(fields: [businessId], references: [id])
+  branchRef                  String?
+  branchId                   String?
+  branch                     BusinessBranch?              @relation(fields: [branchId], references: [id])
+  purchases                  BusinessBranchPurchase[]
+  cashResgiterClosingHistory CashRegisterClosingHistory[]
+  createdAt                  DateTime                     @default(now())
+}
+
+model CashRegisterClosingHistory {
+  id                String                              @id @default(uuid())
+  closedCount       Int                                 @default(1)
+  totalClosedAmount Float                               @default(0.0)
+  closingDate       DateTime
   branchRef         String?
   branchId          String?
-  branch            BusinessBranch?              @relation(fields: [branchId], references: [id])
-  purchases         BusinessBranchPurchase[]
-  createdAt         DateTime                     @default(now())
+  branch            BusinessBranch?                     @relation(fields: [branchId], references: [id])
+  closedByRef       String?
+  closedById        String?
+  closedBy          User?                               @relation(fields: [closedById], references: [id])
+  cashRegisterRef   String?
+  cashRegisterId    String?
+  cashRegister      CashRegister?                       @relation(fields: [cashRegisterId], references: [id])
+  closedSales       BusinessBranchPurchaseClosedSale[]
+  createdAt         DateTime                            @default(now())
+}
+
+model BusinessBranchPurchaseClosedSale {
+  id                             String                       @id @default(uuid())
+  businessBranchPurchaseRef      String?
+  businessBranchPurchaseId       String?
+  businessBranchPurchase         BusinessBranchPurchase?      @relation(fields: [businessBranchPurchaseId], references: [id])
+  cashRegisterClosingHistoryRef  String?
+  cashRegisterClosingHistoryId   String?
+  cashRegisterClosingHistory     CashRegisterClosingHistory?  @relation(fields: [cashRegisterClosingHistoryId], references: [id])
+  createdAt                      DateTime                     @default(now())
 }
 
 model BusinessBranchCollaborator {
@@ -392,27 +428,28 @@ model Purchase {
 }
 
 model BusinessBranchPurchase { // Factura
-  id                          String          @id @default(uuid())
-  ticketNumber                Int?
-  clientName                  String?
-  clientDNI                   String?
-  businessRef                 String?
-  registeredRef               String?
-  cashRegisterRef             String?
-  branchRef                   String?
-  cashRegisterId              String?
-  cashRegister                CashRegister?   @relation(fields: [cashRegisterId], references: [id])
-  userId                      String?
-  user                        User?           @relation(fields: [userId], references: [id])
-  amountCancelled             Float
-  totalAmount                 Float
-  expiredDate                 DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
-  closingDate                 DateTime?
-  approvedByClient            Boolean         @default(false)
-  status                      PurchaseStatus  @default(pendiente)
-  purchases                   Purchase[]
-  purchasesBillPaymentMethod  PurchaseBillPaymentMethod[]
-  createdAt                   DateTime        @default(now())
+  id                                String          @id @default(uuid())
+  ticketNumber                      Int?
+  clientName                        String?
+  clientDNI                         String?
+  businessRef                       String?
+  registeredRef                     String?
+  cashRegisterRef                   String?
+  branchRef                         String?
+  cashRegisterId                    String?
+  cashRegister                      CashRegister?   @relation(fields: [cashRegisterId], references: [id])
+  userId                            String?
+  user                              User?           @relation(fields: [userId], references: [id])
+  amountCancelled                   Float
+  totalAmount                       Float
+  expiredDate                       DateTime?       //@default(dbgenerated("NOW() + INTERVAL 15 DAY"))
+  closingDate                       DateTime?
+  approvedByClient                  Boolean         @default(false)
+  status                            PurchaseStatus  @default(pendiente)
+  purchases                         Purchase[]
+  purchasesBillPaymentMethod        PurchaseBillPaymentMethod[]
+  businessBranchPurchaseClosedSale  BusinessBranchPurchaseClosedSale[]
+  createdAt                         DateTime        @default(now())
 }
 
 model PurchaseBillPaymentMethod {

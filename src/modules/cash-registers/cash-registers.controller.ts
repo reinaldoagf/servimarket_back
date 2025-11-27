@@ -1,5 +1,5 @@
 // src/cash-registers/cash-registers.controller.ts
-import { Controller, Get, Post, Body, Query, ParseIntPipe, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Req, Get, Post, Body, Query, ParseIntPipe, Delete, Param, UseGuards } from '@nestjs/common';
 import { CashRegistersService } from './cash-registers.service';
 import { CreateCashRegisterDto } from './dto/create-cash-register.dto';
 import { PaginatedCashRegisterResponseDto } from './dto/paginated-cash-register-response.dto';
@@ -14,7 +14,7 @@ export class CashRegistersController {
     @Query('businessId') businessId: string = '',
     @Query('branchId') branchId: string = '',
     @Query('page', ParseIntPipe) page = '1',
-    @Query('size', ParseIntPipe) pageSize = '10',
+    @Query('pageSize', ParseIntPipe) pageSize = '10',
     @Query('search') search = '',
     @Query('dateKey') dateKey = '',
     @Query('startDate') startDate = '',
@@ -43,8 +43,9 @@ export class CashRegistersController {
   }
   @Get(':id/close-sales')
   @UseGuards(JwtAuthGuard)
-  async closeSales(@Param('id') id: string) {
-    return this.service.closeSales(id);
+  async closeSales(@Req() req: any,@Param('id') id: string) {
+    const requestingUserID = req.user.sub; // viene del payload del JWT
+    return this.service.closeSales(requestingUserID, id);
   }
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

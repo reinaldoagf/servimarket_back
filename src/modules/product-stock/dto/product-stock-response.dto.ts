@@ -10,13 +10,13 @@ export class ProductStockResponseDto {
   returnOnInvestment: number;
   productId: string | null;
   product: ProductResponseDto | null;
-  branchId: string;
+  branchId: string | null;
   branch: {
     id: string;
     country: string;
     state: string;
     city: string;
     address: string;
-  };
+  } | null;
   createdAt: Date;
 }
