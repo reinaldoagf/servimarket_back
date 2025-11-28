@@ -64,6 +64,9 @@ export class UpdateBusinessBranchPurchaseDto {
   @IsNumber()
   amountCancelled: number;
 
+  @IsNumber()
+  totalAmount: number;
+
   @ValidateNested({ each: true })
   @Type(() => PurchaseBillPaymentMethodItemDto)
   purchasesBillPaymentMethod: PurchaseBillPaymentMethodItemDto[];

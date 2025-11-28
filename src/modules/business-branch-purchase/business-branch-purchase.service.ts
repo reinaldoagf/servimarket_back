@@ -511,6 +511,7 @@ export class BusinessBranchPurchaseService {
       const updatedPurchase = await tx.businessBranchPurchase.update({
         where: { id },
         data: {
+          totalAmount: dto.totalAmount ?? purchase.totalAmount,
           amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
           status: dto.status ?? 'pendiente',
         },
@@ -836,7 +837,11 @@ export class BusinessBranchPurchaseService {
         // 🔹 Recorremos las compras
         for (const purchase of result.purchases) {
           const categoryId = purchase.product?.category?.id ?? null;
-          const totalToAdd = purchase.unitsOrMeasures * purchase.price;
+          // TODO reemplazar el valor fijo de IVA por una variable
+          const totalToAdd = purchase.product?.exemptFromVAT
+            ? purchase.unitsOrMeasures * parseFloat(purchase.price.toFixed(3))
+            : purchase.unitsOrMeasures *
+              parseFloat((purchase.price + purchase.price * 0.16).toFixed(3));
           if (categoryId) {
             // 🔹 Buscar registro existente del mes actual
             const now = new Date();
