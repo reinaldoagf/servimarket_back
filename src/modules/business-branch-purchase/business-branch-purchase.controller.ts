@@ -7,6 +7,7 @@ import {
   Req,
   Body,
   Param,
+  Put,
   Patch,
   UseGuards,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { CreateBusinessBranchPurchaseDto } from './dto/create-business-branch-pu
 import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-business-branch-purchase-response.dto';
 import { BusinessBranchPurchaseService } from './business-branch-purchase.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
+import { PatchBusinessBranchPurchaseDto } from './dto/patch-business-branch-purchase.dto';
 import { ApprovePurchaseDto } from './dto/approve-purchase.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -80,6 +82,11 @@ export class BusinessBranchPurchaseController {
     return this.service.myLastSale(businessId, branchId);
   }
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async patch(@Param('id') id: string, @Body() dto: PatchBusinessBranchPurchaseDto) {
+    return this.service.patch(id, dto);
+  }
+  @Put(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateBusinessBranchPurchaseDto) {
     return this.service.update(id, dto);

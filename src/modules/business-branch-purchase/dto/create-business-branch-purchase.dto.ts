@@ -67,7 +67,6 @@ export class CreateBusinessBranchPurchaseDto {
 
   @ValidateNested({ each: true })
   @Type(() => PurchaseBillPaymentMethodItemDto)
-  @ArrayMinSize(1)
   purchasesBillPaymentMethod: PurchaseBillPaymentMethodItemDto[];
 
   @IsString()

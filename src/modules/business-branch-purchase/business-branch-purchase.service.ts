@@ -5,6 +5,8 @@ import { PaginatedBusinessBranchPurchaseResponseDto } from './dto/paginated-busi
 import { Prisma } from '@prisma/client';
 import { ClientsService } from '../clients/clients.service';
 import { UpdateBusinessBranchPurchaseDto } from './dto/update-business-branch-purchase.dto';
+import { PatchBusinessBranchPurchaseDto } from './dto/patch-business-branch-purchase.dto';
+
 import { MetricsWsService } from '../metrics-ws/metrics-ws.service';
 
 const INCLUDE_FIELDS = {
@@ -69,10 +71,25 @@ const SELECT_FIELDS = {
     select: {
       id: true,
       productId: true,
+      productStockId: true,
       unitsOrMeasures: true,
       price: true,
       createdAt: true,
-      product: { select: { id: true, name: true, category: { select: { id: true, name: true } } } },
+      product: {
+        select: {
+          id: true,
+          name: true,
+          exemptFromVAT: true,
+          flavor: true,
+          measurement: true,
+          priceCalculation: true,
+          smell: true,
+          status: true,
+          unitMeasurement: true,
+          category: { select: { id: true, name: true } },
+          brand: { select: { id: true, name: true } },
+        },
+      },
     },
   },
   purchasesBillPaymentMethod: {
@@ -292,8 +309,242 @@ export class BusinessBranchPurchaseService {
       }
 
       return {
-        message: 'Compra registrada exitosamente.',
+        message: 'Factura registrada exitosamente.',
         data: purchase,
+      };
+    });
+  }
+
+  async patch(id: string, dto: PatchBusinessBranchPurchaseDto) {
+    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
+
+    if (!purchase) {
+      throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
+    }
+
+    await this.service.purchaseBillPaymentMethod.deleteMany({
+      where: { businessBranchPurchaseId: purchase.id },
+    });
+
+    // Registrar metodos de pago de la compra
+    for (const item of dto.purchasesBillPaymentMethod) {
+      await this.service.purchaseBillPaymentMethod.create({
+        data: {
+          amountCancelled: item.amountCancelled,
+          billPaymentMethodId: item.billPaymentMethodId,
+          businessBranchPurchaseId: purchase.id,
+        },
+      });
+    }
+
+    return this.service.businessBranchPurchase.update({
+      where: { id },
+      data: {
+        amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
+        status: dto.status ?? 'pendiente',
+      },
+    });
+  }
+
+  async update(id: string, dto: UpdateBusinessBranchPurchaseDto) {
+    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
+
+    if (!purchase) {
+      throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
+    }
+
+    // 1️⃣ Validar ID de caja registradora
+    if (!dto.cashRegisterId?.length) {
+      throw new BadRequestException('CashRegisterId is required.');
+    }
+
+    // 2️⃣ Buscar caja registradora con relaciones necesarias
+    const cashRegister = await this.service.cashRegister.findUnique({
+      where: { id: dto.cashRegisterId },
+      select: {
+        id: true,
+        description: true,
+        businessId: true,
+        branchId: true,
+        collaborator: { select: { branchId: true } },
+      },
+    });
+
+    if (!cashRegister) {
+      throw new NotFoundException(`CashRegister with ID ${dto.cashRegisterId} not found`);
+    }
+
+    const businessId = cashRegister.businessId;
+    const branchId = cashRegister.branchId;
+
+    // ⚙️ Validar disponibilidad de todos los productos antes de crear la compra
+    const unavailableProducts: string[] = [];
+
+    for (const item of dto.purchases) {
+      const stock = await this.service.productStock.findUnique({
+        where: { id: item.productStockId },
+        select: {
+          id: true,
+          availables: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+              flavor: true,
+              smell: true,
+              brand: { select: { name: true } },
+              category: { select: { id: true } },
+            },
+          },
+        },
+      });
+
+      if (!stock) {
+        throw new NotFoundException(`ProductStock with ID ${item.productStockId} not found`);
+      }
+
+      if (
+        (item.id &&
+          item.prevUnitsOrMeasures &&
+          item.unitsOrMeasures - item.prevUnitsOrMeasures > stock.availables) ||
+        (item.id == undefined && item.unitsOrMeasures > stock.availables && stock.product)
+      ) {
+        unavailableProducts.push(
+          `${stock.product?.name}, ${stock.product?.flavor ?? ''} ${stock.product?.smell ?? ''} ${stock.product?.brand?.name ?? ''} (disponible: ${stock.availables}, solicitado: ${item.id && item.prevUnitsOrMeasures ? item.unitsOrMeasures - item.prevUnitsOrMeasures : item.unitsOrMeasures})`,
+        );
+      }
+    }
+
+    // 🚨 Si hay al menos un producto sin stock suficiente, abortar operación
+    if (unavailableProducts.length > 0) {
+      throw new BadRequestException({
+        message:
+          'La operación no pudo completarse. Algunos productos no tienen suficiente stock disponible.',
+        unavailable: unavailableProducts,
+      });
+    }
+
+    // ✅ Si todo está disponible, proceder con la transacción
+    return this.service.$transaction(async (tx) => {
+      for (const item of dto.purchases) {
+        if (item.id) {
+          await tx.purchase.update({
+            where: { id: item.id },
+            data: { unitsOrMeasures: item.unitsOrMeasures },
+          });
+        } else {
+          await tx.purchase.create({
+            data: {
+              businessBranchPurchaseId: purchase.id,
+              businessBranchPurchaseRef: purchase.id,
+              productStockId: item.productStockId,
+              productId: item.productId,
+              unitsOrMeasures: item.unitsOrMeasures,
+              price: item.price,
+            },
+          });
+        }
+
+        // 🔹 Descontar stock
+        const updatedStock = await tx.productStock.update({
+          where: { id: item.productStockId },
+          data: {
+            availables: {
+              decrement:
+                item.id && item.prevUnitsOrMeasures
+                  ? item.unitsOrMeasures - item.prevUnitsOrMeasures
+                  : item.unitsOrMeasures,
+            },
+          },
+          select: {
+            id: true,
+            product: { select: { category: { select: { id: true, name: true } } } },
+          },
+        });
+
+        const categoryId = updatedStock.product?.category?.id ?? null;
+        const totalToAdd =
+          item.id && item.prevUnitsOrMeasures
+            ? (item.unitsOrMeasures - item.prevUnitsOrMeasures) * item.price
+            : item.unitsOrMeasures * item.price;
+
+        if (categoryId) {
+          // 🔹 Buscar registro existente del mes actual
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+          const existingCategoryRecord = await tx.saleByCategory.findFirst({
+            where: {
+              categoryId,
+              businessId,
+              branchId,
+              userId: dto.userId ?? null,
+              createdAt: { gte: startOfMonth, lte: endOfMonth },
+            },
+            select: { id: true, total: true },
+          });
+
+          if (existingCategoryRecord) {
+            // 🔹 Si existe, incrementar el total
+            await tx.saleByCategory.update({
+              where: { id: existingCategoryRecord.id },
+              data: { total: { increment: totalToAdd } },
+            });
+          } else {
+            // 🔹 Si no existe, crear nuevo registro
+            await tx.saleByCategory.create({
+              data: {
+                categoryId,
+                businessId,
+                branchId,
+                userRef: dto.clientDNI ?? null,
+                userId: dto.userId ?? null,
+                total: totalToAdd,
+                categoryRef: updatedStock.product?.category?.name ?? businessId,
+              },
+            });
+          }
+        }
+      }
+
+      const updatedPurchase = await tx.businessBranchPurchase.update({
+        where: { id },
+        data: {
+          amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
+          status: dto.status ?? 'pendiente',
+        },
+      });
+
+      if (dto.userId) {
+        this.metricsWs.emitPurchaseToUser(dto.userId, {
+          message: 'Factura actualizada',
+          updatedPurchase,
+        });
+      }
+
+      if (dto.status != 'no_procesado') {
+        // Registrar metodos de pago de la compra
+        await tx.purchaseBillPaymentMethod.deleteMany({
+          where: { businessBranchPurchaseId: purchase.id },
+        });
+        for (const item of dto.purchasesBillPaymentMethod) {
+          await tx.purchaseBillPaymentMethod.create({
+            data: {
+              amountCancelled: item.amountCancelled,
+              billPaymentMethodId: item.billPaymentMethodId,
+              businessBranchPurchaseId: purchase.id,
+            },
+          });
+        }
+      }
+
+      return {
+        message:
+          dto.status == 'no_procesado'
+            ? 'Cuenta actualizada exitosamente.'
+            : 'Factura actualizada exitosamente.',
+        data: updatedPurchase,
       };
     });
   }
@@ -568,37 +819,6 @@ export class BusinessBranchPurchaseService {
     }
 
     return lastSale;
-  }
-
-  async update(id: string, dto: UpdateBusinessBranchPurchaseDto) {
-    const purchase = await this.service.businessBranchPurchase.findUnique({ where: { id } });
-
-    if (!purchase) {
-      throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
-    }
-
-    await this.service.purchaseBillPaymentMethod.deleteMany({
-      where: { businessBranchPurchaseId: purchase.id },
-    });
-
-    // Registrar metodos de pago de la compra
-    for (const item of dto.purchasesBillPaymentMethod) {
-      await this.service.purchaseBillPaymentMethod.create({
-        data: {
-          amountCancelled: item.amountCancelled,
-          billPaymentMethodId: item.billPaymentMethodId,
-          businessBranchPurchaseId: purchase.id,
-        },
-      });
-    }
-
-    return this.service.businessBranchPurchase.update({
-      where: { id },
-      data: {
-        amountCancelled: dto.amountCancelled ?? purchase.amountCancelled,
-        status: dto.status ?? 'pendiente',
-      },
-    });
   }
 
   async approve(requestingUserID: string, businessBranchPurchaseId: string, approve: boolean) {

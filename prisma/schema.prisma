@@ -30,6 +30,7 @@ enum PurchaseStatus {
   pendiente
   pagado
   caducado
+  no_procesado
 }
 
 enum UserStatus {
