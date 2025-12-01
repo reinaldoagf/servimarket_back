@@ -33,6 +33,13 @@ const SELECT_FIELDS = {
           createdAt: true,
         },
       },
+      category: {
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+        },
+      },
     },
   },
   branchId: true,
