@@ -122,6 +122,9 @@ export class ProductStockService {
       }),
     ]);
 
+    console.log({search})
+    console.log({data})
+
     return {
       data,
       total,
