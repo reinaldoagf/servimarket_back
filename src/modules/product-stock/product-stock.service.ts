@@ -80,9 +80,12 @@ export class ProductStockService {
 
     if (search) {
       where.OR = [
+        { product: { barcode: { contains: search } } },
         { product: { name: { contains: search } } },
         { product: { flavor: { contains: search } } },
         { product: { smell: { contains: search } } },
+        { product: { brand: { name: { contains: search } } } },
+        { product: { category: { name: { contains: search } } } },
       ];
     }
 
