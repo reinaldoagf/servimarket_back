@@ -92,7 +92,6 @@ export class ProductStockService {
         { product: { flavor: { contains: search } } },
         { product: { smell: { contains: search } } },
         { product: { brand: { name: { contains: search } } } },
-        { product: { category: { name: { contains: search } } } },
       ];
     }
 
