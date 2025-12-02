@@ -19,6 +19,9 @@ async function bootstrap() {
     ], // o el dominio exacto de tu Angular
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
