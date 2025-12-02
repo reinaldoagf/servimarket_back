@@ -156,15 +156,17 @@ model User {
 }
 
 model ProductBrand {
-  id        String    @id @default(uuid())
-  name      String    @unique
+  id        String         @id @default(uuid())
+  name      String         @unique
+  status    ProductStatus  @default(activo)
   products  Product[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime       @default(now())
 }
 
 model ProductCategory {
   id                  String    @id @default(uuid())
   name                String    @unique
+  status              ProductStatus  @default(activo)
   products            Product[]
   salesByCategory     SaleByCategory[]
   purchasesByCategory PurchaseByCategory[]

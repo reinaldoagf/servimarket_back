@@ -30,7 +30,7 @@ const SELECT_FIELDS = {
       tag: true,
       createdAt: true,
     },
-  }
+  },
 };
 
 @Injectable()
@@ -62,13 +62,9 @@ export class ProductsService {
         { category: { name: { contains: search } } },
       ];
     }
-    
     // 🔹 Filtro por businessId si existe
     if (businessId) {
-      where.OR = [
-      { businessId: businessId },
-      { status: 'activo' },
-    ];
+      where.OR = [{ businessId: businessId }, { status: 'activo' }];
     } else {
       if (status && status !== 'Todos') {
         where.status = status as any; // casteamos porque viene como string
@@ -123,6 +119,29 @@ export class ProductsService {
 
   async addProduct(dto: CreateProductDto) {
     try {
+      if (!dto.brandId && dto.brandName) {
+        let brand = await this.service.productBrand.findUnique({ where: { name: dto.brandName } });
+        if (!brand) {
+          brand = await this.service.productBrand.create({
+            data: { name: dto.brandName, status: 'revisar' },
+          });
+        }
+        dto.brandId = brand.id;
+        console.log({newbrand: brand})
+      }
+      if (!dto.categoryId && dto.categoryName) {
+        let category = await this.service.productCategory.findUnique({
+          where: { name: dto.categoryName },
+        });
+        if (!category) {
+          category = await this.service.productCategory.create({
+            data: { name: dto.categoryName, status: 'revisar' },
+          });
+        }
+        dto.categoryId = category.id;
+        console.log({newcategory: category})
+      }
+
       // Crear producto junto con presentaciones si vienen
       const product = await this.service.product.create({
         data: {
@@ -140,8 +159,8 @@ export class ProductsService {
           status: dto.businessId ? 'revisar' : (dto.status ?? null),
           tags: dto.tags?.length
             ? { create: dto.tags.map((p) => ({ tag: p.tag ?? null })) }
-            : undefined
-        }
+            : undefined,
+        },
       });
 
       return product;
@@ -173,8 +192,8 @@ export class ProductsService {
               dto.tags?.map((p) => ({
                 tag: p.tag ?? null,
               })) || [],
-          }
-        }
+          },
+        },
       });
 
       return product;

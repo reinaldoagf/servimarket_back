@@ -51,6 +51,12 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   @Type(() => String)
+  brandName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Type(() => String)
   brandId?: string;
 
   @ApiPropertyOptional()
@@ -58,6 +64,12 @@ export class CreateProductDto {
   @IsString()
   @Type(() => String)
   categoryId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Type(() => String)
+  categoryName?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

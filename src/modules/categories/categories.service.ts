@@ -9,6 +9,7 @@ import { PaginatedCategoryResponseDto } from './dto/paginated-category-response.
 const SELECT_FIELDS = {
   id: true,
   name: true,
+  status: true,
   createdAt: true,
 };
 
@@ -73,6 +74,7 @@ export class CategoriesService {
     return this.service.productCategory.create({
       data: {
         name: dto.name,
+        status: dto.status,
       },
     });
   }
@@ -88,6 +90,7 @@ export class CategoriesService {
       where: { id },
       data: {
         name: dto.name ?? category.name,
+        status: dto.status ?? category.status,
       },
     });
   }

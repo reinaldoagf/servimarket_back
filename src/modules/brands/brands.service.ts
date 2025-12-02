@@ -9,6 +9,7 @@ import { PaginatedBrandResponseDto } from './dto/paginated-brand-response.dto';
 const SELECT_FIELDS = {
   id: true,
   name: true,
+  status: true,
   createdAt: true,
 };
 
@@ -73,6 +74,7 @@ export class BrandsService {
     return this.service.productBrand.create({
       data: {
         name: dto.name,
+        status: dto.status,
       },
     });
   }
@@ -88,6 +90,7 @@ export class BrandsService {
       where: { id },
       data: {
         name: dto.name ?? brand.name,
+        status: dto.status ?? brand.status,
       },
     });
   }
