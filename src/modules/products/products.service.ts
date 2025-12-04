@@ -127,7 +127,6 @@ export class ProductsService {
           });
         }
         dto.brandId = brand.id;
-        console.log({newbrand: brand})
       }
       if (!dto.categoryId && dto.categoryName) {
         let category = await this.service.productCategory.findUnique({
@@ -139,7 +138,6 @@ export class ProductsService {
           });
         }
         dto.categoryId = category.id;
-        console.log({newcategory: category})
       }
 
       // Crear producto junto con presentaciones si vienen
