@@ -169,6 +169,26 @@ export class ProductsService {
 
   async updateProduct(id: string, dto: UpdateProductDto) {
     try {
+      if (!dto.brandId && dto.brandName) {
+        let brand = await this.service.productBrand.findUnique({ where: { name: dto.brandName } });
+        if (!brand) {
+          brand = await this.service.productBrand.create({
+            data: { name: dto.brandName, status: 'revisar' },
+          });
+        }
+        dto.brandId = brand.id;
+      }
+      if (!dto.categoryId && dto.categoryName) {
+        let category = await this.service.productCategory.findUnique({
+          where: { name: dto.categoryName },
+        });
+        if (!category) {
+          category = await this.service.productCategory.create({
+            data: { name: dto.categoryName, status: 'revisar' },
+          });
+        }
+        dto.categoryId = category.id;
+      }
       const product = await this.service.product.update({
         where: { id },
         data: {
@@ -192,6 +212,7 @@ export class ProductsService {
               })) || [],
           },
         },
+        select: SELECT_FIELDS,
       });
 
       return product;
