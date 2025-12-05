@@ -159,6 +159,7 @@ export class ProductsService {
             ? { create: dto.tags.map((p) => ({ tag: p.tag ?? null })) }
             : undefined,
         },
+        select: SELECT_FIELDS,
       });
 
       return product;
