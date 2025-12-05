@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { CreateProductStockDto } from './dto/create-product-stock.dto';
 import { UpdateProductStockDto } from './dto/update-product-stock.dto';
 import { PaginatedProductStockResponseDto } from './dto/paginated-product-stock-response.dto';
+import { normalize } from 'src/common/utils/normalize.util';
 
 const SELECT_FIELDS = {
   id: true,
@@ -86,12 +87,14 @@ export class ProductStockService {
     }
 
     if (search) {
+      const normalizedSearch = normalize(search);
+      const searchValue = normalizedSearch ?? search;
       where.OR = [
-        { product: { barcode: { contains: search } } },
-        { product: { name: { contains: search } } },
-        { product: { flavor: { contains: search } } },
-        { product: { smell: { contains: search } } },
-        { product: { brand: { name: { contains: search } } } },
+        { product: { barcode: { contains: searchValue } } },
+        { product: { name: { contains: searchValue } } },
+        { product: { flavor: { contains: searchValue } } },
+        { product: { smell: { contains: searchValue } } },
+        { product: { brand: { name: { contains: searchValue } } } },
       ];
     }
 
