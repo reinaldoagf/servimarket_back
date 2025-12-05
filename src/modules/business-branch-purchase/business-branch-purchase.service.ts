@@ -880,4 +880,121 @@ export class BusinessBranchPurchaseService {
     }
     return result;
   }
+
+  async deletePurchaseItem(id: string, cashRegisterId: string, userId: string, clientDNI: string) {
+    const purchase = await this.service.purchase.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        price: true,
+        unitsOrMeasures: true,
+        productStockId: true,
+        businessBranchPurchaseId: true,
+        product: { select: { exemptFromVAT: true } },
+      },
+    });
+
+    if (!purchase) {
+      throw new NotFoundException(`Purchase with ID ${id} not found`);
+    }
+
+    // Buscar caja registradora con relaciones necesarias
+    const cashRegister = await this.service.cashRegister.findUnique({
+      where: { id: cashRegisterId },
+      select: {
+        id: true,
+        description: true,
+        businessId: true,
+        branchId: true,
+        collaborator: { select: { branchId: true } },
+      },
+    });
+
+    if (!cashRegister) {
+      throw new NotFoundException(`CashRegister with ID ${cashRegisterId} not found`);
+    }
+
+    if (purchase.productStockId) {
+      // 🔹 Descontar stock
+      const updatedStock = await this.service.productStock.update({
+        where: { id: purchase.productStockId },
+        data: {
+          availables: { increment: purchase.unitsOrMeasures },
+        },
+        select: {
+          id: true,
+          product: { select: { category: { select: { id: true, name: true } } } },
+        },
+      });
+
+      const categoryId = updatedStock.product?.category?.id ?? null;
+      const businessId = cashRegister.businessId;
+      const branchId = cashRegister.branchId;
+
+      const totalToDecrement = purchase.product?.exemptFromVAT
+        ? purchase.unitsOrMeasures * parseFloat(purchase.price.toFixed(3))
+        : purchase.unitsOrMeasures *
+          parseFloat((purchase.price + purchase.price * 0.16).toFixed(3)); // TODO: actualizar el valor de IVA
+
+      
+
+      const salesByCategoryUpdated = await this.service.saleByCategory.updateMany({
+        where: {
+          categoryId,
+          businessId,
+          branchId,
+          userRef: clientDNI ?? null,
+          userId: userId ?? null,
+        },
+        data: {
+          total: { decrement: totalToDecrement },
+        },
+      });
+
+      if (purchase.businessBranchPurchaseId) {
+        const businessBranchPurchase = await this.service.businessBranchPurchase.findUnique({
+          where: { id: purchase.businessBranchPurchaseId },
+        });
+
+        if (!businessBranchPurchase) {
+          throw new NotFoundException(`BusinessBranchPurchase with ID ${id} not found`);
+        }
+
+        if (userId.length && businessBranchPurchase.approvedByClient) {
+          await this.service.saleByCategory.updateMany({
+            where: {
+              categoryId,
+              businessId,
+              branchId,
+              userId: userId,
+            },
+            data: {
+              total: { decrement: totalToDecrement },
+            },
+          });
+        }
+
+        const data =
+          businessBranchPurchase.amountCancelled >= totalToDecrement
+            ? {
+                totalAmount: { decrement: totalToDecrement },
+                amountCancelled: { decrement: totalToDecrement },
+              }
+            : {
+                totalAmount: { decrement: totalToDecrement },
+              };
+
+        await this.service.businessBranchPurchase.update({
+          where: {
+            id: purchase.businessBranchPurchaseId,
+          },
+          data: data,
+        });
+      }
+    }
+
+    return this.service.purchase.delete({
+      where: { id: purchase.id },
+    });
+  }
 }

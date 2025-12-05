@@ -6,6 +6,7 @@ import {
   Post,
   Req,
   Body,
+  Delete,
   Param,
   Put,
   Patch,
@@ -96,5 +97,15 @@ export class BusinessBranchPurchaseController {
   async approve(@Req() req: any, @Param('id') id: string, @Body() dto: ApprovePurchaseDto) {
     const requestingUserID = req.user.sub; // viene del payload del JWT
     return this.service.approve(requestingUserID, id, dto.approve);
+  }
+  @Delete('/delete-purchase-item/:id')
+  @UseGuards(JwtAuthGuard)
+  async deletePurchaseItem(
+    @Param('id') id: string, 
+    @Query('cashRegisterId') cashRegisterId: string = '',
+    @Query('userId') userId: string = '',
+    @Query('clientDNI') clientDNI: string = '',
+  ) {
+    return this.service.deletePurchaseItem(id, cashRegisterId, userId, clientDNI);
   }
 }
