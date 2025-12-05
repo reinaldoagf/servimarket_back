@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginatedProductResponseDto } from './dto/paginated-product-response.dto';
+import { normalize } from 'src/common/utils/normalize.util';
 
 const SELECT_FIELDS = {
   id: true,
@@ -36,7 +37,6 @@ const SELECT_FIELDS = {
 @Injectable()
 export class ProductsService {
   constructor(private service: PrismaService) {}
-
   async getByFilters(
     businessId?: string | null,
     page = 1,
@@ -53,21 +53,38 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {};
 
     if (search) {
-      where.OR = [
-        { barcode: { contains: search } },
-        { name: { contains: search } },
-        { flavor: { contains: search } },
-        { smell: { contains: search } },
-        { brand: { name: { contains: search } } },
-        { category: { name: { contains: search } } },
+      const normalizedSearch = normalize(search);
+
+      const searchValue = normalizedSearch ?? search;
+
+      const searchFilters: Prisma.ProductWhereInput[] = [
+        { barcode: { contains: searchValue } },
+        { name: { contains: searchValue } },
+        { flavor: { contains: searchValue } },
+        { smell: { contains: searchValue } },
+        { brand: { name: { contains: searchValue } } },
+        { category: { name: { contains: searchValue } } },
       ];
-    }
-    // 🔹 Filtro por businessId si existe
-    if (businessId) {
-      where.OR = [{ businessId: businessId }, { status: 'activo' }];
+
+      // si existe businessId → aplicar AND con búsqueda
+      if (businessId) {
+        where.AND = [
+          { OR: [{ businessId: businessId }, { status: 'activo' }] },
+          { OR: searchFilters },
+        ];
+      } else {
+        // SIN businessId → aplicar búsqueda normal
+        where.OR = searchFilters;
+      }
     } else {
-      if (status && status !== 'Todos') {
-        where.status = status as any; // casteamos porque viene como string
+      // 🔹 Filtro por businessId si existe
+      if (businessId) {
+        // modifica la consulta (debe retornar ({ businessId: businessId } || { status: 'activo' }) AND where search match)
+        where.OR = [{ businessId: businessId }, { status: 'activo' }];
+      } else {
+        if (status && status !== 'Todos') {
+          where.status = status as any; // casteamos porque viene como string
+        }
       }
     }
 
