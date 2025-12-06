@@ -22,8 +22,8 @@ const SELECT_FIELDS = {
   priceCalculation: true,
   measurement: true,
   unitMeasurement: true,
-  brand: { select: { id: true, name: true, createdAt: true } },
-  category: { select: { id: true, name: true, createdAt: true } },
+  brand: { select: { id: true, name: true, status: true, createdAt: true } },
+  category: { select: { id: true, name: true, status: true, createdAt: true } },
   business: { select: { id: true, name: true, createdAt: true } },
   tags: {
     select: {

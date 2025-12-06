@@ -31,6 +31,7 @@ const SELECT_FIELDS = {
         select: {
           id: true,
           name: true,
+          status: true,
           createdAt: true,
         },
       },
@@ -38,6 +39,7 @@ const SELECT_FIELDS = {
         select: {
           id: true,
           name: true,
+          status: true,
           createdAt: true,
         },
       },
