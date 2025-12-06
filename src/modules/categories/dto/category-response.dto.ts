@@ -2,5 +2,6 @@
 export class CategoryResponseDto {
   id: string;
   name: string;
+  status: string;
   createdAt: Date;
 }
