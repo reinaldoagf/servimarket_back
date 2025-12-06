@@ -3,6 +3,8 @@ import { IsString, IsNumber, IsOptional, IsBoolean, IsEnum, ValidateNested } fro
 import { Type } from 'class-transformer';
 import { UnitMeasurement, ProductStatus, PriceCalculation } from '@prisma/client';
 import { CreateProductTagDto } from './create-product-tag.dto';
+import { BrandResponseDto } from '../../brands/dto/brand-response.dto';
+import { CategoryResponseDto } from '../../categories/dto/category-response.dto';
 
 export class CreateProductDto {
   @ApiPropertyOptional()
@@ -61,9 +63,17 @@ export class CreateProductDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  brand?: BrandResponseDto;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   @Type(() => String)
   categoryId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  category?: CategoryResponseDto;
 
   @ApiPropertyOptional()
   @IsOptional()
